@@ -174,6 +174,14 @@ growproc(int n)
   return 0;
 }
 
+uint
+wmap(uint addr, int length, int flags, int fd)
+{
+  cprintf("wmap()\n");
+  cprintf("addr=%x, length=%d, flags=%d, fd=%d\n", addr, length, flags, fd);
+  return 0;
+}
+
 // Create a new process copying p as the parent.
 // Sets up stack to return as if from system call.
 // Caller must set state of returned proc to RUNNABLE.

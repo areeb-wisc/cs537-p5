@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+#include "wmap.h"
 
 int
 sys_fork(void)
@@ -93,8 +94,42 @@ sys_uptime(void)
 int
 sys_wmap(void)
 {
-  cprintf("wmap()\n");
-  return 0;
+  cprintf("sys_wmap()\n");
+  int addr0, length, flags, fd;
+
+  if(argint(0, &addr0) < 0)
+    return -1;
+
+  if(argint(1, &length) < 0)
+    return -2;
+
+  if(argint(2, &flags) < 0)
+    return -3;
+
+  if(argint(3, &fd) < 0)
+    return -4;
+  
+  if (addr0 < 0)
+    return -5;
+  
+  uint addr = addr0;
+
+  if (addr < VA_START || addr > VA_END || addr % PGSIZE)
+    return -6;
+
+  if (length <= 0 || length > VA_END - VA_START)
+    return -7;
+  
+  if (flags <= 0 || flags&1 || flags > 16)
+    return -8;
+  
+  if (!(flags & MAP_SHARED) || !(flags & MAP_FIXED))
+    return -9;
+
+  if (fd < 0 || fd >= NOFILE)
+    return -10;
+
+  return wmap(addr, length, flags, fd);
 }
 int
 sys_wunmap(void)

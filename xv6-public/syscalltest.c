@@ -1,13 +1,13 @@
 #include "types.h"
 #include "user.h"
-// #include "wmap.h"
+#include "wmap.h"
 
 int main(int argc, char* argv[]) {
-    // wmap(0,0,0,0);
-    // wunmap(0);
+    int rc = wmap(VA_START,123,10,2);
+    printf(1, "rc = %d\n", rc);
+    wunmap(0);
+    va2pa(0);
     // struct wmapinfo* p = (struct wmapinfo*)malloc(sizeof(struct wmapinfo));
     // getwmapinfo(p);
-    // va2pa(0);
-    // printf(1, "hello\n");
     return 0;
 }
