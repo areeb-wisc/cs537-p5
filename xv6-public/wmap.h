@@ -15,3 +15,8 @@ struct wmapinfo {
     int length[MAX_WMMAP_INFO];         // Size of mapping
     int n_loaded_pages[MAX_WMMAP_INFO]; // Number of pages physically loaded into memory
 };
+struct filemapinfo {
+    int totalfilemaps;
+    int addr[MAX_WMMAP_INFO];
+    int fd[MAX_WMMAP_INFO];
+};

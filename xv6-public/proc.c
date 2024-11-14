@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "wmap.h"
 
 struct {
   struct spinlock lock;
@@ -19,6 +20,103 @@ extern void forkret(void);
 extern void trapret(void);
 
 static void wakeup1(void *chan);
+
+struct wmapinfo addr_mappings;
+struct filemapinfo file_mappings;
+
+void init_lazy_maps() {
+  cprintf("init_lazy_maps()\n");
+  addr_mappings.total_mmaps = 0;
+  file_mappings.totalfilemaps = 0;
+}
+
+void add_address_mapping(uint addr, int length) {
+  cprintf("add_address_mapping()\n");
+  int idx = addr_mappings.total_mmaps;
+  cprintf("idx = %d\n", idx);
+  addr_mappings.addr[idx] = addr;
+  cprintf("addedd address\n");
+  addr_mappings.length[idx] = length;
+  addr_mappings.n_loaded_pages[idx] = 0;
+  addr_mappings.total_mmaps++;
+}
+
+void add_file_mapping(uint addr, int fd) {
+  cprintf("add_file_mapping()\n");
+  int idx = file_mappings.totalfilemaps;
+  file_mappings.addr[idx] = addr;
+  file_mappings.fd[idx] = fd;
+  file_mappings.totalfilemaps++;
+}
+
+void add_lazy_mapping(uint addr, int length, int fd) {
+  add_address_mapping(addr, length);
+  add_file_mapping(addr, fd);
+}
+
+int lazily_mapping_index(uint addr) {
+  for (int i = 0; i < addr_mappings.total_mmaps; i++) {
+    uint start = addr_mappings.addr[i];
+    uint end = start + addr_mappings.length[i];
+    if (addr >= start && addr <= end)
+      return i;
+  }
+  return -1;
+}
+
+static pte_t* walkpgdir(pde_t *pgdir, const void *va, int alloc) {
+  pde_t *pde;
+  pte_t *pgtab;
+
+  pde = &pgdir[PDX(va)];
+  if(*pde & PTE_P){
+    pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
+  } else {
+    if(!alloc || (pgtab = (pte_t*)kalloc()) == 0)
+      return 0;
+    // Make sure all those PTE_P bits are zero.
+    memset(pgtab, 0, PGSIZE);
+    // The permissions here are overly generous, but they can
+    // be further restricted by the permissions in the page table
+    // entries, if necessary.
+    *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
+  }
+  return &pgtab[PTX(va)];
+}
+
+static int mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm) {
+  char *a, *last;
+  pte_t *pte;
+
+  a = (char*)PGROUNDDOWN((uint)va);
+  last = (char*)PGROUNDDOWN(((uint)va) + size - 1);
+  for(;;){
+    if((pte = walkpgdir(pgdir, a, 1)) == 0)
+      return -1;
+    if(*pte & PTE_P)
+      panic("remap");
+    *pte = pa | perm | PTE_P;
+    if(a == last)
+      break;
+    a += PGSIZE;
+    pa += PGSIZE;
+  }
+  return 0;
+}
+
+int do_real_mapping(uint addr, int idx) {
+  
+  char* mem = kalloc();
+  if (mem == 0) {
+    cprintf("Kernel OOM!\n");
+    return -1;
+  }
+  struct proc* currproc = myproc();
+  if (mappages(currproc->pgdir, (void*)addr, PGSIZE, V2P(mem), 10) < 0)
+    return -1;
+  addr_mappings.n_loaded_pages[idx]++;
+  return 0;
+}
 
 void
 pinit(void)
@@ -179,6 +277,7 @@ wmap(uint addr, int length, int flags, int fd)
 {
   cprintf("wmap()\n");
   cprintf("addr=%x, length=%d, flags=%d, fd=%d\n", addr, length, flags, fd);
+  add_lazy_mapping(addr, length, fd);
   return 0;
 }
 
@@ -330,6 +429,8 @@ wait(void)
 void
 scheduler(void)
 {
+  init_lazy_maps();
+
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;

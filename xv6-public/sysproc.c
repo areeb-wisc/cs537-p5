@@ -114,7 +114,7 @@ sys_wmap(void)
   
   uint addr = addr0;
 
-  if (addr < VA_START || addr > VA_END || addr % PGSIZE)
+  if (addr < VA_START || addr >= VA_END || addr % PGSIZE)
     return -6;
 
   if (length <= 0 || length > VA_END - VA_START)
