@@ -22,44 +22,91 @@ extern void trapret(void);
 static void wakeup1(void *chan);
 
 struct wmapinfo addr_mappings;
-struct filemapinfo file_mappings;
+struct wmap_metainfo file_and_permission_mappings;
+
+void show_lazy_mappings() {
+  cprintf("Lazy mappings:\n\n");
+  cprintf("idx\taddr\t\tlength\tloaded\tfd\tflags\n");
+  for (int i = 0; i < MAX_WMMAP_INFO; i++) {
+    int addr = addr_mappings.addr[i];
+    if (addr > 0) {
+      int length = addr_mappings.length[i];
+      int loaded = addr_mappings.n_loaded_pages[i];
+      int fd = file_and_permission_mappings.fd[i];
+      int flags = file_and_permission_mappings.flags[i];
+      cprintf("%d\t%d\t%d\t%d\t%d\t%d\n",i,addr,length,loaded,fd,flags);
+    }
+  }
+  cprintf("\ntotal_mmaps = %d\n", addr_mappings.total_mmaps);
+  cprintf("total_metainfo = %d\n\n", file_and_permission_mappings.total_metainfo);
+}
 
 void init_lazy_maps() {
   cprintf("init_lazy_maps()\n");
   addr_mappings.total_mmaps = 0;
-  file_mappings.totalfilemaps = 0;
+  file_and_permission_mappings.total_metainfo = 0;
 }
 
-void add_address_mapping(uint addr, int length) {
+int get_free_idx() {
+  cprintf("get_free_idx()\n");
+  for (int i = 0; i < MAX_WMMAP_INFO; i++) {
+    if (addr_mappings.addr[i] == 0)
+      return i;
+  }
+  return -1;
+}
+
+void free_address_mapping(int idx) {
+  addr_mappings.addr[idx] = 0;
+  addr_mappings.length[idx] = 0;
+  addr_mappings.n_loaded_pages[idx] = 0;
+  addr_mappings.total_mmaps--;
+}
+
+void free_file_and_permission_mappings(int idx) {
+  file_and_permission_mappings.addr[idx] = 0;
+  file_and_permission_mappings.fd[idx] = 0;
+  file_and_permission_mappings.flags[idx] = 0;
+  file_and_permission_mappings.total_metainfo--;
+}
+
+void free_lazy_idx(int idx) {
+  free_address_mapping(idx);
+  free_file_and_permission_mappings(idx);
+}
+
+void add_address_mapping(uint addr, int length, int idx) {
   cprintf("add_address_mapping()\n");
-  int idx = addr_mappings.total_mmaps;
-  cprintf("idx = %d\n", idx);
   addr_mappings.addr[idx] = addr;
-  cprintf("addedd address\n");
   addr_mappings.length[idx] = length;
   addr_mappings.n_loaded_pages[idx] = 0;
   addr_mappings.total_mmaps++;
 }
 
-void add_file_mapping(uint addr, int fd) {
+void add_file_and_permission_mapping(uint addr, int fd, int flags, int idx) {
   cprintf("add_file_mapping()\n");
-  int idx = file_mappings.totalfilemaps;
-  file_mappings.addr[idx] = addr;
-  file_mappings.fd[idx] = fd;
-  file_mappings.totalfilemaps++;
+  file_and_permission_mappings.addr[idx] = addr;
+  file_and_permission_mappings.fd[idx] = fd;
+  file_and_permission_mappings.flags[idx] = flags;
+  file_and_permission_mappings.total_metainfo++;
 }
 
-void add_lazy_mapping(uint addr, int length, int fd) {
-  add_address_mapping(addr, length);
-  add_file_mapping(addr, fd);
+void add_lazy_mapping(uint addr, int length, int fd, int flags) {
+  cprintf("add_lazy_mapping()\n");
+  int idx = get_free_idx();
+  cprintf("idx = %d\n", idx);
+  add_address_mapping(addr, length, idx);
+  add_file_and_permission_mapping(addr, fd, flags, idx);
 }
 
-int lazily_mapping_index(uint addr) {
-  for (int i = 0; i < addr_mappings.total_mmaps; i++) {
+int lazily_mapped_index(uint addr) {
+  for (int i = 0; i < MAX_WMMAP_INFO; i++) {
     uint start = addr_mappings.addr[i];
-    uint end = start + addr_mappings.length[i];
-    if (addr >= start && addr <= end)
-      return i;
+    if (start > 0) {
+      uint end = start + addr_mappings.length[i];
+      if (addr >= start && addr <= end)
+        return i;
+    }
   }
   return -1;
 }
@@ -277,7 +324,8 @@ wmap(uint addr, int length, int flags, int fd)
 {
   cprintf("wmap()\n");
   cprintf("addr=%x, length=%d, flags=%d, fd=%d\n", addr, length, flags, fd);
-  add_lazy_mapping(addr, length, fd);
+  add_lazy_mapping(addr, length, fd, flags);
+  show_lazy_mappings();
   return 0;
 }
 
