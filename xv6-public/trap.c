@@ -77,6 +77,18 @@ trap(struct trapframe *tf)
             cpuid(), tf->cs, tf->eip);
     lapiceoi();
     break;
+  case T_PGFLT:
+    uint addr = tf->eip;
+    cprintf("PAGE fault for eip: 0x%x\n", addr);
+    int idx = get_free_idx();
+    int success = -1;
+    if (idx != -1)
+      success = do_real_mapping(addr, idx);
+
+    if (success == 0)
+      break;
+    else
+      cprintf("Lazy mapping failed for addr: 0x%x\n", addr);
 
   //PAGEBREAK: 13
   default:

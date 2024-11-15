@@ -121,6 +121,8 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 uint            wmap(uint,int,int,int);
+int             get_free_idx(void);
+int             do_real_mapping(uint, int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

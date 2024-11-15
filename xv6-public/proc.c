@@ -34,7 +34,7 @@ void show_lazy_mappings() {
       int loaded = addr_mappings.n_loaded_pages[i];
       int fd = file_and_permission_mappings.fd[i];
       int flags = file_and_permission_mappings.flags[i];
-      cprintf("%d\t%d\t%d\t%d\t%d\t%d\n",i,addr,length,loaded,fd,flags);
+      cprintf("%d\t0x%x\t%d\t%d\t%d\t%d\n",i,addr,length,loaded,fd,flags);
     }
   }
   cprintf("\ntotal_mmaps = %d\n", addr_mappings.total_mmaps);
@@ -162,6 +162,7 @@ int do_real_mapping(uint addr, int idx) {
   if (mappages(currproc->pgdir, (void*)addr, PGSIZE, V2P(mem), 10) < 0)
     return -1;
   addr_mappings.n_loaded_pages[idx]++;
+  show_lazy_mappings();
   return 0;
 }
 
