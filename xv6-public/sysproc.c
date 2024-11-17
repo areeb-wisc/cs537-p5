@@ -46,6 +46,7 @@ sys_getpid(void)
 int
 sys_sbrk(void)
 {
+  dprintf("sys_sbrk()\n");
   int addr;
   int n;
 
@@ -94,7 +95,7 @@ sys_uptime(void)
 int
 sys_wmap(void)
 {
-  cprintf("sys_wmap()\n");
+  dprintf("sys_wmap()\n");
   int addr0, length, flags, fd;
 
   if(argint(0, &addr0) < 0)
@@ -131,21 +132,33 @@ sys_wmap(void)
 
   return wmap(addr, length, flags, fd);
 }
+
 int
 sys_wunmap(void)
 {
-  cprintf("wunmap()\n");
+  dprintf("wunmap()\n");
   return 0;
 }
+
 int
 sys_va2pa(void)
 {
-  cprintf("va2pa()\n");
-  return 0;
+  dprintf("va2pa()\n");
+  int addr0;
+
+  if(argint(0, &addr0) < 0)
+    return -1;
+  
+  if (addr0 < 0)
+    return -1;
+
+  uint addr = (uint)(addr0);
+  return va2pa(addr);
 }
+
 int
 sys_getwmapinfo(void)
 {
-  cprintf("getwmapinfo()\n");
+  dprintf("getwmapinfo()\n");
   return 0;
 }

@@ -60,6 +60,10 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 static int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
+  // dprintf("mappages() original\n");
+  // dprintf("pgdir = 0x%x\n", *pgdir);
+  // dprintf("va = 0x%x\n", va);
+  // dprintf("pa = 0x%x\n", pa);
   char *a, *last;
   pte_t *pte;
 
@@ -221,6 +225,8 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
+  // dprintf("allocuvm()\n");
+  // dprintf("oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
   char *mem;
   uint a;
 
@@ -238,6 +244,10 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       return 0;
     }
     memset(mem, 0, PGSIZE);
+    // dprintf("pgdir = 0x%x\n", *pgdir);
+    // dprintf("va = 0x%x\n", (char*)a);
+    // dprintf("pa = 0x%x\n", V2P(mem));
+
     if(mappages(pgdir, (char*)a, PGSIZE, V2P(mem), PTE_W|PTE_U) < 0){
       cprintf("allocuvm out of memory (2)\n");
       deallocuvm(pgdir, newsz, oldsz);
