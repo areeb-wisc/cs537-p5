@@ -124,6 +124,7 @@ void            yield(void);
 uint            wmap(uint,int,int,int);
 int             lazily_mapped_index(uint);
 int             do_real_mapping(uint, int);
+int             wunmap(uint);
 uint            va2pa(uint);
 
 // swtch.S

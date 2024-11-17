@@ -136,14 +136,23 @@ sys_wmap(void)
 int
 sys_wunmap(void)
 {
-  dprintf("wunmap()\n");
-  return 0;
+  dprintf("sys_wunmap()\n");
+  int addr0;
+  if(argint(0, &addr0) < 0)
+    return -1;
+  
+  if (addr0 < 0)
+    return -1;
+
+  uint addr = (uint)(addr0);
+  
+  return wunmap(addr);
 }
 
 int
 sys_va2pa(void)
 {
-  dprintf("va2pa()\n");
+  dprintf("sys_va2pa()\n");
   int addr0;
 
   if(argint(0, &addr0) < 0)
@@ -159,6 +168,6 @@ sys_va2pa(void)
 int
 sys_getwmapinfo(void)
 {
-  dprintf("getwmapinfo()\n");
+  dprintf("sys_getwmapinfo()\n");
   return 0;
 }
