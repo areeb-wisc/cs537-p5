@@ -382,11 +382,27 @@ wmap(uint addr, int length, int flags, int fd)
   return SUCCESS;
 }
 
+int
+wunmap(uint addr)
+{
+  dprintf("wunmap()\n");
+  int idx = lazily_mapped_index(addr);
+  if (idx == -1)
+    return FAILED;
+  uint newsz = addr_mappings.addr[idx];
+  uint oldsz = newsz + addr_mappings.length[idx];
+  dprintf("oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
+  deallocuvm(myproc()->pgdir, oldsz, newsz);
+  return SUCCESS;
+}
+
 uint va2pa(uint addr)
 {
   pte_t* pte = walkpgdir(myproc()->pgdir, (void*)addr, 0, 0);
-  if (pte == 0)
+  if (pte == 0) {
+    dprintf("no pte\n");
     return -1;
+  }
   uint offset = PTE_FLAGS(addr);
   uint pa = PTE_ADDR(*pte) | offset;
   return pa;
