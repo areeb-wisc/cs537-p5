@@ -19,6 +19,7 @@ void            bwrite(struct buf*);
 // console.c
 void            consoleinit(void);
 void            cprintf(char*, ...);
+void            dprintf(char*, ...);
 void            consoleintr(int(*)(void));
 void            panic(char*) __attribute__((noreturn));
 
@@ -121,8 +122,9 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 uint            wmap(uint,int,int,int);
-int             get_free_idx(void);
+int             lazily_mapped_index(uint);
 int             do_real_mapping(uint, int);
+uint            va2pa(uint);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

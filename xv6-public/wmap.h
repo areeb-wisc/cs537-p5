@@ -17,7 +17,7 @@ struct wmapinfo {
 };
 struct wmap_metainfo {
     int total_metainfo;
-    int addr[MAX_WMMAP_INFO];
+    uint kernel_addr[MAX_WMMAP_INFO];
     int fd[MAX_WMMAP_INFO];
     int flags[MAX_WMMAP_INFO];
 };
