@@ -100,12 +100,23 @@ int add_lazy_mapping(uint addr, int length, int fd, int flags) {
     dprintf("More than %d wmaps\n", MAX_WMMAP_INFO);
     return -1;
   }
-  char* mem = kalloc();
-  if (mem == 0) {
-    dprintf("Kernel OOM!\n");
-    return -1;
-  }
-  uint kern_addr = (uint)(mem);
+
+  int n_pages = length / PGSIZE;
+  if (length % PGSIZE)
+    n_pages++;
+
+  char* mem0 = 0;
+  do {
+    char* mem = kalloc();
+    if (mem == 0) {
+      dprintf("Kernel OOM!\n");
+      return -1;
+    }
+    if (mem0 == 0)
+      mem0 = mem;
+  } while (n_pages--);
+
+  uint kern_addr = (uint)(mem0);
   add_address_mapping(addr, length, idx);
   add_metainfo_mapping(kern_addr, fd, flags, idx);
   return 0;
