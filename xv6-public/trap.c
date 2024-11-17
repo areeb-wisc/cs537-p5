@@ -32,6 +32,8 @@ idtinit(void)
   lidt(idt, sizeof(idt));
 }
 
+int count = 0;
+
 //PAGEBREAK: 41
 void
 trap(struct trapframe *tf)
@@ -78,13 +80,15 @@ trap(struct trapframe *tf)
     lapiceoi();
     break;
   case T_PGFLT:
+    count++;
     uint addr = rcr2();
     dprintf("PAGE fault for addr: 0x%x\n", addr);
+    dprintf("count = %d\n", count);
     int idx = lazily_mapped_index(addr);
     int success = -1;
     if (idx != -1)
       success = do_real_mapping(addr, idx);
-
+    myproc()->tf->eax = success;
     if (success == 0) {
       dprintf("Lazy mapping realized\n");
       return;

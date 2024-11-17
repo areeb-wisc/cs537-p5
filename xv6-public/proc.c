@@ -168,7 +168,7 @@ static int map_single_page(pde_t *pgdir, void *va, uint size, uint pa, int perm)
   dprintf("*pte before = 0x%x\n", *pte);
   if(*pte & PTE_P)
     panic("remap");
-  *pte = pa | perm | PTE_P;
+  *pte = pa | perm | PTE_P | PTE_W | PTE_U;
   dprintf("*pte after = 0x%x\n", *pte);
   return 0;
 }
@@ -176,7 +176,9 @@ static int map_single_page(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 int do_real_mapping(uint addr, int idx) {
   dprintf("do_real_mapping()\n");
   // show_lazy_mappings();
-  uint kern_addr = metainfo_mappings.kernel_addr[idx];
+  uint kern_base_addr = metainfo_mappings.kernel_addr[idx];
+  uint kern_offset = addr_mappings.n_loaded_pages[idx];
+  uint kern_addr = kern_base_addr + PGSIZE*kern_offset;
   // dprintf("kern_addr = 0x%x\n", kern_addr);
   // dprintf("V2P(kern_addr) = 0x%x\n", V2P(kern_addr));
   int flags = metainfo_mappings.flags[idx];
