@@ -19,17 +19,38 @@ int main(int argc, char* argv[]) {
     // out1 = va2pa(0x4000);
     // printf(1, "va2pa(0x4000) = 0x%x\n", out1);
     
-    int rc1 = wmap(VA_START,123,10,2);
+    int rc1 = wmap(VA_START,8192,10,2);
     printf(1, "rc1 = %d\n", rc1);
 
-    uint out = va2pa(VA_START);
+    uint out = va2pa(VA_START); // get 0
     printf(1, "va2pa(0x60000000) = 0x%x\n", out);
+
+    memset((void*)VA_START,0,4096); // cause page-fault and allocation
+
+    out = va2pa(VA_START);
+    printf(1, "va2pa(0x60000000) = 0x%x\n", out); // get correct pa
+
+    out = va2pa(VA_START+4096); // get 0
+    printf(1, "va2pa(0x60001000) = 0x%x\n", out);
+
+    memset((void*)(VA_START+4096),0,4096); // cause page-fault and allocation
+
+    out = va2pa(VA_START+4096);
+    printf(1, "va2pa(0x60001000) = 0x%x\n", out); // get correct pa
+
+
+
+    // char* s2 = (char*)(VA_START);
+    // s2[0] = 'c';
+    // s2[1] = 'd';
+    // s2[2] = '\n';
+    // printf(1, "s2 = %s\n", s2);
 
     // memset((void*)VA_START,0,100);
 
-    out = va2pa(VA_START);
-    printf(1, "va2pa(0x60000000) = 0x%x\n", out);
-    
+    // out = va2pa(VA_START);
+    // printf(1, "va2pa(0x60000000) = 0x%x\n", out);
+
     // int rc2 = wmap(0x60001000,123,10,2);
     // printf(1, "rc2 = %d\n", rc2);
     
