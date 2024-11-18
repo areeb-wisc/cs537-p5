@@ -104,10 +104,11 @@ cprintf(char *fmt, ...)
 }
 
 void
-dprintf(char *fmt, ...)
+dprintf(int level, char *fmt, ...)
 {
-  if (!DEBUGGING)
+  if (level > DEBUG_LEVEL)
     return;
+  
   
   int i, c, locking;
   uint *argp;

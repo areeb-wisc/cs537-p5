@@ -25,8 +25,8 @@ struct wmapinfo addr_mappings;
 struct wmap_metainfo metainfo_mappings;
 
 void show_lazy_mappings() {
-  dprintf("Lazy mappings:\n\n");
-  dprintf("idx\taddr\t\tlength\tkern_addr\t\tloaded\tfd\tflags\n");
+  dprintf(4,"Lazy mappings:\n\n");
+  dprintf(3,"idx\taddr\t\tlength\tkern_addr\t\tloaded\tfd\tflags\n");
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
     int addr = addr_mappings.addr[i];
     if (addr > 0) {
@@ -35,21 +35,21 @@ void show_lazy_mappings() {
       int loaded = addr_mappings.n_loaded_pages[i];
       int fd = metainfo_mappings.fd[i];
       int flags = metainfo_mappings.flags[i];
-      dprintf("%d\t0x%x\t%d\t0x%x\t\t%d\t%d\t%d\n",i,addr,length,kern_addr,loaded,fd,flags);
+      dprintf(3,"%d\t0x%x\t%d\t0x%x\t\t%d\t%d\t%d\n",i,addr,length,kern_addr,loaded,fd,flags);
     }
   }
-  dprintf("\ntotal_mmaps = %d\n", addr_mappings.total_mmaps);
-  dprintf("total_metainfo = %d\n\n", metainfo_mappings.total_metainfo);
+  dprintf(3,"\ntotal_mmaps = %d\n", addr_mappings.total_mmaps);
+  dprintf(3,"total_metainfo = %d\n\n", metainfo_mappings.total_metainfo);
 }
 
 void init_lazy_maps() {
-  dprintf("init_lazy_maps()\n");
+  dprintf(4,"init_lazy_maps()\n");
   addr_mappings.total_mmaps = 0;
   metainfo_mappings.total_metainfo = 0;
 }
 
 int get_free_idx() {
-  dprintf("get_free_idx()\n");
+  dprintf(4,"get_free_idx()\n");
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
     if (addr_mappings.addr[i] == 0)
       return i;
@@ -77,7 +77,7 @@ void free_lazy_idx(int idx) {
 }
 
 void add_address_mapping(uint addr, int length, int idx) {
-  dprintf("add_address_mapping()\n");
+  dprintf(4,"add_address_mapping()\n");
   addr_mappings.addr[idx] = addr;
   addr_mappings.length[idx] = length;
   addr_mappings.n_loaded_pages[idx] = 0;
@@ -85,7 +85,7 @@ void add_address_mapping(uint addr, int length, int idx) {
 }
 
 void add_metainfo_mapping(uint kern_addr, int fd, int flags, int idx) {
-  dprintf("add_metainfo_mapping()\n");
+  dprintf(4,"add_metainfo_mapping()\n");
   metainfo_mappings.kernel_addr[idx] = kern_addr;
   metainfo_mappings.fd[idx] = fd;
   metainfo_mappings.flags[idx] = flags;
@@ -93,11 +93,11 @@ void add_metainfo_mapping(uint kern_addr, int fd, int flags, int idx) {
 }
 
 int add_lazy_mapping(uint addr, int length, int fd, int flags) {
-  dprintf("add_lazy_mapping()\n");
+  dprintf(4,"add_lazy_mapping()\n");
   int idx = get_free_idx();
-  dprintf("idx = %d\n", idx);
+  dprintf(2,"idx = %d\n", idx);
   if (idx == -1) {
-    dprintf("More than %d wmaps\n", MAX_WMMAP_INFO);
+    dprintf(1,"More than %d wmaps\n", MAX_WMMAP_INFO);
     return -1;
   }
 
@@ -109,7 +109,7 @@ int add_lazy_mapping(uint addr, int length, int fd, int flags) {
   do {
     char* mem = kalloc();
     if (mem == 0) {
-      dprintf("Kernel OOM!\n");
+      dprintf(1,"Kernel OOM!\n");
       return -1;
     }
     if (mem0 == 0)
@@ -135,57 +135,57 @@ int lazily_mapped_index(uint addr) {
 }
 
 static pte_t* walkpgdir(pde_t *pgdir, const void *va, int alloc, const void* ka) {
-  dprintf("walkpgdir()\n");
-  dprintf("pgdir = 0x%x\n", pgdir);
-  dprintf("*pgdir = 0x%x\n", *pgdir);
-  dprintf("va = 0x%x\n", va);
+  dprintf(4,"walkpgdir()\n");
+  dprintf(3,"pgdir = 0x%x\n", pgdir);
+  dprintf(2,"*pgdir = 0x%x\n", *pgdir);
+  dprintf(2,"va = 0x%x\n", va);
   pde_t *pde;
   pte_t *pgtab;
 
-  dprintf("pgdir index = top 10 bits of va = 0x%x\n", PDX(va));
+  dprintf(3,"pgdir index = top 10 bits of va = 0x%x\n", PDX(va));
   pde = &pgdir[PDX(va)];
-  dprintf("pde  = 0x%x\n", pde);
-  dprintf("*pde before = 0x%x\n", *pde);
+  dprintf(3,"pde  = 0x%x\n", pde);
+  dprintf(3,"*pde before = 0x%x\n", *pde);
   if(*pde & PTE_P){
     pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
-    dprintf("pgtab1 = 0x%x\n", pgtab);
-    dprintf("*pgtab1 = 0x%x\n", *pgtab);
+    dprintf(3,"pgtab1 = 0x%x\n", pgtab);
+    dprintf(3,"*pgtab1 = 0x%x\n", *pgtab);
   } else {
     if(!alloc)
-      return 0;
+      return (pte_t*)(0);
     // pgtab = (pte_t*)(ka);
     pgtab = (pte_t*)kalloc();
-    dprintf("pgtab2 = 0x%x\n", pgtab);
-    dprintf("*pgtab2 = 0x%x\n", *pgtab);
+    dprintf(3,"pgtab2 = 0x%x\n", pgtab);
+    dprintf(3,"*pgtab2 = 0x%x\n", *pgtab);
     if (pgtab == 0)
-      return 0;
+      return (pte_t*)(0);
     // Make sure all those PTE_P bits are zero.
     memset(pgtab, 0, PGSIZE);
     // The permissions here are overly generous, but they can
     // be further restricted by the permissions in the page table
     // entries, if necessary.
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
-    dprintf("*pde after = 0x%x\n", *pde);
+    dprintf(3,"*pde after = 0x%x\n", *pde);
   }
-  // dprintf("final = 0x%x\n", pgtab[PTX(va)]);
+  dprintf(2,"*pte = 0x%x\n", pgtab[PTX(va)]);
   return &pgtab[PTX(va)];
 }
 
 static int map_single_page(pde_t *pgdir, void *va, uint size, uint pa, int perm) {
-  dprintf("mappages()\n");
-  dprintf("va = 0x%x, pa = 0x%x\n", va, pa);
+  dprintf(4,"mappages()\n");
+  dprintf(2,"va = 0x%x, pa = 0x%x\n", va, pa);
   pte_t *pte = walkpgdir(pgdir, va, 1, P2V(pa));
-  dprintf("pte = 0x%x\n", pte);
-  dprintf("*pte before = 0x%x\n", *pte);
+  dprintf(3,"pte = 0x%x\n", pte);
+  dprintf(3,"*pte before = 0x%x\n", *pte);
   if(*pte & PTE_P)
     panic("remap");
   *pte = pa | perm | PTE_P | PTE_W | PTE_U;
-  dprintf("*pte after = 0x%x\n", *pte);
+  dprintf(2,"*pte after = 0x%x\n", *pte);
   return 0;
 }
 
 int do_real_mapping(uint addr, int idx) {
-  dprintf("do_real_mapping()\n");
+  dprintf(4,"do_real_mapping()\n");
   // show_lazy_mappings();
   uint kern_base_addr = metainfo_mappings.kernel_addr[idx];
   uint kern_offset = addr_mappings.n_loaded_pages[idx];
@@ -342,7 +342,7 @@ userinit(void)
 int
 growproc(int n)
 {
-  dprintf("growproc()\n");
+  dprintf(4,"growproc()\n");
   uint sz;
   struct proc *curproc = myproc();
 
@@ -362,9 +362,9 @@ growproc(int n)
 uint
 wmap(uint addr, int length, int flags, int fd)
 {
-  dprintf("wmap()\n");
-  dprintf("addr=%x, length=%d, flags=%d, fd=%d\n", addr, length, flags, fd);
-  dprintf("*pgdir = 0x%x\n", *myproc()->pgdir);
+  dprintf(4,"wmap()\n");
+  dprintf(1,"wmap addr=%x, length=%d, flags=%d, fd=%d\n", addr, length, flags, fd);
+  dprintf(3,"*pgdir = 0x%x\n", *myproc()->pgdir);
   // dprintf("pgdir[0] = 0x%x\n", myproc()->pgdir[0]);
   // dprintf("pgdir[1] = 0x%x\n", myproc()->pgdir[1]);
   // dprintf("pgdir[179] = 0x%x\n", myproc()->pgdir[179]);
@@ -385,22 +385,48 @@ wmap(uint addr, int length, int flags, int fd)
 int
 wunmap(uint addr)
 {
-  dprintf("wunmap()\n");
+  dprintf(4,"wunmap()\n");
   int idx = lazily_mapped_index(addr);
   if (idx == -1)
     return FAILED;
   uint newsz = addr_mappings.addr[idx];
   uint oldsz = newsz + addr_mappings.length[idx];
-  dprintf("oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
+  dprintf(1,"oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
   deallocuvm(myproc()->pgdir, oldsz, newsz);
   return SUCCESS;
 }
 
 uint va2pa(uint addr)
 {
+  dprintf(1,"va2pa()\n");
   pte_t* pte = walkpgdir(myproc()->pgdir, (void*)addr, 0, 0);
-  if (pte == 0) {
-    dprintf("no pte\n");
+
+  // dprintf(0,"pte = 0x%x\n", pte);
+  // dprintf(0,"pte = %d\n", pte);
+  // dprintf(0, "pte == 0: %d\n", pte == 0);
+  // dprintf(0,"*pte = 0x%x\n", *pte);
+  // dprintf(0,"pte = 0x%x\n", pte);
+  // dprintf(0,"pte = %d\n", pte);
+  // dprintf(0, "pte == 0: %d\n", pte == 0);
+  // dprintf(0, "&pte = 0x%x\n", &pte);
+
+  // cprintf("start\n");
+  // cprintf("pte = 0x%x\n", pte);
+  // cprintf("pte = %d\n", pte);
+  // cprintf("pte == 0: %d\n", pte == 0);
+  // cprintf("*pte = 0x%x\n", *pte);
+  // cprintf("pte = 0x%x\n", pte);
+  // cprintf("pte = %d\n", pte);
+  // cprintf("pte == 0: %d\n", pte == 0);
+  // cprintf("&pte = 0x%x\n", &pte);
+  // cprintf("start\n");
+  
+  // dprintf(0,"pte = 0x%x\n", pte);
+  // dprintf(0, "pte == 0: %d\n", pte == 0);
+  // dprintf(0,"*pte = 0x%x\n", *pte);
+
+  if (pte == 0 || *pte == 0 || !(*pte & PTE_P)) {
+    // dprintf(0,"va2pa no pte\n");
     return -1;
   }
   uint offset = PTE_FLAGS(addr);

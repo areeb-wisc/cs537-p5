@@ -19,7 +19,7 @@ void            bwrite(struct buf*);
 // console.c
 void            consoleinit(void);
 void            cprintf(char*, ...);
-void            dprintf(char*, ...);
+void            dprintf(int, char*, ...);
 void            consoleintr(int(*)(void));
 void            panic(char*) __attribute__((noreturn));
 
