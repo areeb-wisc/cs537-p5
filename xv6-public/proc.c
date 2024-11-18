@@ -25,8 +25,8 @@ struct wmapinfo addr_mappings;
 struct wmap_metainfo metainfo_mappings;
 
 void show_lazy_mappings() {
-  dprintf(4,"Lazy mappings:\n\n");
-  dprintf(3,"idx\taddr\t\tlength\tkern_addr\t\tloaded\tfd\tflags\n");
+  cprintf("Lazy mappings:\n\n");
+  cprintf("idx\taddr\t\tlength\tkern_addr\t\tloaded\tfd\tflags\n");
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
     int addr = addr_mappings.addr[i];
     if (addr > 0) {
@@ -35,11 +35,11 @@ void show_lazy_mappings() {
       int loaded = addr_mappings.n_loaded_pages[i];
       int fd = metainfo_mappings.fd[i];
       int flags = metainfo_mappings.flags[i];
-      dprintf(3,"%d\t0x%x\t%d\t0x%x\t\t%d\t%d\t%d\n",i,addr,length,kern_addr,loaded,fd,flags);
+      cprintf("%d\t0x%x\t%d\t0x%x\t\t%d\t%d\t%d\n",i,addr,length,kern_addr,loaded,fd,flags);
     }
   }
-  dprintf(3,"\ntotal_mmaps = %d\n", addr_mappings.total_mmaps);
-  dprintf(3,"total_metainfo = %d\n\n", metainfo_mappings.total_metainfo);
+  cprintf("\ntotal_mmaps = %d\n", addr_mappings.total_mmaps);
+  cprintf("total_metainfo = %d\n\n", metainfo_mappings.total_metainfo);
 }
 
 void init_lazy_maps() {
@@ -72,8 +72,10 @@ void free_metainfo_mappings(int idx) {
 }
 
 void free_lazy_idx(int idx) {
+  dprintf(4, "free_lazy_idx()\n");
   free_address_mapping(idx);
   free_metainfo_mappings(idx);
+  // show_lazy_mappings();
 }
 
 void add_address_mapping(uint addr, int length, int idx) {
@@ -200,7 +202,7 @@ int do_real_mapping(uint addr, int idx) {
     return -1;
 
   addr_mappings.n_loaded_pages[idx]++;
-  show_lazy_mappings();
+  // show_lazy_mappings();
   return 0;
 }
 
@@ -374,7 +376,7 @@ wmap(uint addr, int length, int flags, int fd)
   if (idx != -1)
     return FAILED;
   add_lazy_mapping(addr, length, fd, flags);
-  show_lazy_mappings();
+  // show_lazy_mappings();
   // char* mem = kalloc();
   // mappages(myproc()->pgdir, (void*)addr, PGSIZE, V2P(mem), flags);
   // idx = lazily_mapped_index(addr);
@@ -393,12 +395,13 @@ wunmap(uint addr)
   uint oldsz = newsz + addr_mappings.length[idx];
   dprintf(1,"oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
   deallocuvm(myproc()->pgdir, oldsz, newsz);
+  free_lazy_idx(idx);
   return SUCCESS;
 }
 
 uint va2pa(uint addr)
 {
-  dprintf(1,"va2pa()\n");
+  dprintf(4,"va2pa()\n");
   pte_t* pte = walkpgdir(myproc()->pgdir, (void*)addr, 0, 0);
 
   // dprintf(0,"pte = 0x%x\n", pte);
@@ -432,6 +435,19 @@ uint va2pa(uint addr)
   uint offset = PTE_FLAGS(addr);
   uint pa = PTE_ADDR(*pte) | offset;
   return pa;
+}
+
+int
+getwmapinfo(struct wmapinfo* ps)
+{
+  dprintf(4, "getwmapinfo() in proc.c\n");
+  for (int i = 0; i < MAX_WMMAP_INFO; i++) {
+    ps->addr[i] = addr_mappings.addr[i];
+    ps->length[i] = addr_mappings.length[i];
+    ps->n_loaded_pages[i] = addr_mappings.n_loaded_pages[i];
+  }
+  ps->total_mmaps = addr_mappings.total_mmaps;
+  return SUCCESS;
 }
 
 // Create a new process copying p as the parent.

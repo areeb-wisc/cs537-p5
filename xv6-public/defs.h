@@ -9,6 +9,7 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct wmapinfo;
 
 // bio.c
 void            binit(void);
@@ -126,6 +127,7 @@ int             lazily_mapped_index(uint);
 int             do_real_mapping(uint, int);
 int             wunmap(uint);
 uint            va2pa(uint);
+int             getwmapinfo(struct wmapinfo*);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

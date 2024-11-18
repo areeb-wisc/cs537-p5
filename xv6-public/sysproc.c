@@ -169,5 +169,13 @@ int
 sys_getwmapinfo(void)
 {
   dprintf(4,"sys_getwmapinfo()\n");
-  return 0;
+  struct wmapinfo* ps;
+
+  if (argptr(0, (void*)&ps, sizeof(*ps)) < 0)
+    return -1;
+
+  if (ps == 0)
+    return -1;
+
+  return getwmapinfo(ps);
 }
