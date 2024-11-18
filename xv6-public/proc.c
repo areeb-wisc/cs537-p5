@@ -381,7 +381,7 @@ wmap(uint addr, int length, int flags, int fd)
   // mappages(myproc()->pgdir, (void*)addr, PGSIZE, V2P(mem), flags);
   // idx = lazily_mapped_index(addr);
   // do_real_mapping(addr, idx);
-  return SUCCESS;
+  return addr;
 }
 
 int
@@ -430,7 +430,7 @@ uint va2pa(uint addr)
 
   if (pte == 0 || *pte == 0 || !(*pte & PTE_P)) {
     // dprintf(0,"va2pa no pte\n");
-    return -1;
+    return FAILED;
   }
   uint offset = PTE_FLAGS(addr);
   uint pa = PTE_ADDR(*pte) | offset;
