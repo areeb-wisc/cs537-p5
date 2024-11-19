@@ -83,17 +83,20 @@ trap(struct trapframe *tf)
     count++;
     uint addr = rcr2();
     dprintf(2,"PAGE fault for addr: 0x%x\n", addr);
-    dprintf(3,"count = %d\n", count);
+    dprintf(2,"count = %d\n", count);
     int idx = lazily_mapped_index(addr);
+    dprintf(2, "lazily_mapped_idx = %d\n", idx);
     int success = -1;
     if (idx != -1)
       success = do_real_mapping(addr, idx);
-    myproc()->tf->eax = success;
+    // myproc()->tf->eax = success;
     if (success == 0) {
       dprintf(2,"Lazy mapping realized\n");
-      return;
+      // return;
+      break;
     } else {
       dprintf(2,"Lazy mapping failed for addr: 0x%x\n", addr);
+      // break;
     }
 
   //PAGEBREAK: 13

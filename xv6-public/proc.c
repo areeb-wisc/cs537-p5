@@ -114,6 +114,10 @@ int add_lazy_mapping(uint addr, int length, int fd, int flags) {
       dprintf(1,"Kernel OOM!\n");
       return -1;
     }
+    dprintf(4, "before memsetting kern_addr = 0x%x\n", mem);
+    memset(mem, 0, PGSIZE);
+    dprintf(4, "after memsetting kern_addr = 0x%x\n", mem);
+
     if (mem0 == 0)
       mem0 = mem;
   } while (n_pages--);
@@ -158,11 +162,12 @@ static pte_t* walkpgdir(pde_t *pgdir, const void *va, int alloc, const void* ka)
     // pgtab = (pte_t*)(ka);
     pgtab = (pte_t*)kalloc();
     dprintf(3,"pgtab2 = 0x%x\n", pgtab);
-    dprintf(3,"*pgtab2 = 0x%x\n", *pgtab);
     if (pgtab == 0)
       return (pte_t*)(0);
     // Make sure all those PTE_P bits are zero.
     memset(pgtab, 0, PGSIZE);
+    dprintf(3,"*pgtab2 = 0x%x\n", *pgtab);
+    dprintf(3, "pgtab2[1] = 0x%x\n", pgtab[1]);
     // The permissions here are overly generous, but they can
     // be further restricted by the permissions in the page table
     // entries, if necessary.
@@ -174,7 +179,7 @@ static pte_t* walkpgdir(pde_t *pgdir, const void *va, int alloc, const void* ka)
 }
 
 static int map_single_page(pde_t *pgdir, void *va, uint size, uint pa, int perm) {
-  dprintf(4,"mappages()\n");
+  dprintf(4,"map_single_page()\n");
   dprintf(2,"va = 0x%x, pa = 0x%x\n", va, pa);
   pte_t *pte = walkpgdir(pgdir, va, 1, P2V(pa));
   dprintf(3,"pte = 0x%x\n", pte);
@@ -192,6 +197,9 @@ int do_real_mapping(uint addr, int idx) {
   uint kern_base_addr = metainfo_mappings.kernel_addr[idx];
   uint kern_offset = addr_mappings.n_loaded_pages[idx];
   uint kern_addr = kern_base_addr + PGSIZE*kern_offset;
+  // dprintf(4, "before memsetting kern_addr = 0x%x\n", kern_addr);
+  // memset((void*)kern_addr, 0, PGSIZE);
+  // dprintf(4, "after memsetting kern_addr = 0x%x\n", kern_addr);
   // dprintf("kern_addr = 0x%x\n", kern_addr);
   // dprintf("V2P(kern_addr) = 0x%x\n", V2P(kern_addr));
   int flags = metainfo_mappings.flags[idx];
@@ -387,14 +395,39 @@ wmap(uint addr, int length, int flags, int fd)
 int
 wunmap(uint addr)
 {
-  dprintf(4,"wunmap()\n");
+  dprintf(2,"wunmap()\n");
   int idx = lazily_mapped_index(addr);
   if (idx == -1)
     return FAILED;
-  uint newsz = addr_mappings.addr[idx];
-  uint oldsz = newsz + addr_mappings.length[idx];
-  dprintf(1,"oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
-  deallocuvm(myproc()->pgdir, oldsz, newsz);
+  // uint newsz = addr_mappings.addr[idx];
+  // uint oldsz = newsz + PGSIZE * addr_mappings.n_loaded_pages[idx];
+  // dprintf(1,"oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
+  // deallocuvm(myproc()->pgdir, oldsz, newsz);
+  int length = addr_mappings.length[idx];
+  int n_pages = length / PGSIZE;
+  if (length % PGSIZE)
+    n_pages++;
+  pte_t* pgdir = myproc()->pgdir;
+  pte_t *pte;
+  uint a = addr_mappings.addr[idx];
+  while (n_pages--) {
+    pte = walkpgdir(pgdir, (char*)a, 0, 0);
+    // if(!pte)
+    //   a = PGADDR(PDX(a) + 1, 0, 0) - PGSIZE;
+    // else if((*pte & PTE_P) != 0){
+    //   pa = PTE_ADDR(*pte);
+    //   if(pa == 0)
+    //     panic("kfree");
+    //   char *v = P2V(pa);
+    //   kfree(v);
+    //   *pte = 0;
+    // }
+    if (pte) {
+      kfree(P2V(PTE_ADDR(*pte)));
+      *pte = 0;
+    }
+    a += PGSIZE;
+  }
   free_lazy_idx(idx);
   return SUCCESS;
 }

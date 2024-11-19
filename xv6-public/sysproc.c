@@ -127,7 +127,7 @@ sys_wmap(void)
   if (!(flags & MAP_SHARED) || !(flags & MAP_FIXED))
     return FAILED;
 
-  if (fd < 0 || fd >= NOFILE)
+  if (!(flags & MAP_ANONYMOUS) &&  (fd < 0 || fd >= NOFILE))
     return FAILED;
 
   return wmap(addr, length, flags, fd);
