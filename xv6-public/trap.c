@@ -95,8 +95,10 @@ trap(struct trapframe *tf)
       // return;
       break;
     } else {
+      cprintf("Segmentation Fault\n");
       dprintf(2,"Lazy mapping failed for addr: 0x%x\n", addr);
-      // break;
+      myproc()->killed = 1;
+      break;
     }
 
   //PAGEBREAK: 13
