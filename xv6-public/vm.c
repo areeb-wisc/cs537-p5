@@ -330,16 +330,37 @@ copyuvm(pde_t *pgdir, uint sz)
   uint pa, i, flags;
   char *mem;
 
-  if((d = setupkvm()) == 0)
+  if((d = setupkvm()) == 0) // set up child process's pgdir with kernel mappings
     return 0;
-  for(i = 0; i < sz; i += PGSIZE){
+  for(i = 0; i < sz; i += PGSIZE){ // for each page in parent's user memory
+
+    // get pte for page table tables
+    // this might be 0 for wmapped regions which haven't been accessed yet
+    // in fact, if this is zero, can we say this is a wmapped region?
+    // so we don't need to copy them (we can't becuse these pages haven't even been mapped in parent yet)
+
+    // Address i:
+    // 1. non wmapped: mapped at pa, make pte read-only, map i to pa
+    // 2. wmapped, not yet mapped (*pte = 0): skip mapping in child as well, and go to next page
+    // 3. wmapped, mapped, anonymous: mapped at pa, make pte read-only, map i to pa
+    // (as it has already been mapped, it is the same as non wmapped region)
+    // 4. wmapped, mapped, shared: mapped at pa, keep original permissions, map i to pa
+
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
       panic("copyuvm: page not present");
-    pa = PTE_ADDR(*pte);
-    flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
+    pa = PTE_ADDR(*pte); // get physical address
+    flags = PTE_FLAGS(*pte); // get flags
+
+    // for regular fork, create a new page, (but we're not doing this)
+    // for shared memory, we can directly use pa instead of V2P(mem)
+    // because we want this section to be shared b/w across forks
+    // also think where to read form fd in shared memory
+    // also set flags to read only here for COW implementation
+    // i.e. if this is a wmapped page, keep original permissions, directly map it to child
+    // else mark page as read only, and directly map to child, increment reference count
+    if((mem = kalloc()) == 0) 
       goto bad;
     memmove(mem, (char*)P2V(pa), PGSIZE);
     if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
