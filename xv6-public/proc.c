@@ -21,74 +21,43 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
-struct wmapinfo addr_mappings;
-struct wmap_metainfo metainfo_mappings;
-
 void show_lazy_mappings() {
   cprintf("Lazy mappings:\n\n");
   cprintf("idx\taddr\t\tlength\tkern_addr\t\tloaded\tfd\tflags\n");
+  wmap_data wdata = myproc()->wmapdata;
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
-    int addr = addr_mappings.addr[i];
+    int addr = wdata.winfo.addr[i];
     if (addr > 0) {
-      int length = addr_mappings.length[i];
-      int loaded = addr_mappings.n_loaded_pages[i];
-      int fd = metainfo_mappings.fd[i];
-      int flags = metainfo_mappings.flags[i];
+      int length = wdata.winfo.length[i];
+      int loaded = wdata.winfo.n_loaded_pages[i];
+      int fd = wdata.fd[i];
+      int flags = wdata.flags[i];
       cprintf("%d\t0x%x\t%d\t%d\t%d\t%d\n",i,addr,length,loaded,fd,flags);
     }
   }
-  cprintf("\ntotal_mmaps = %d\n", addr_mappings.total_mmaps);
-  cprintf("total_metainfo = %d\n\n", metainfo_mappings.total_metainfo);
-}
-
-void init_lazy_maps() {
-  dprintf(4,"init_lazy_maps()\n");
-  addr_mappings.total_mmaps = 0;
-  metainfo_mappings.total_metainfo = 0;
+  cprintf("\ntotal_mmaps = %d\n", wdata.winfo.total_mmaps);
 }
 
 int get_free_idx() {
   dprintf(4,"get_free_idx()\n");
+  struct wmapinfo winfo = myproc()->wmapdata.winfo;
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
-    if (addr_mappings.addr[i] == 0)
+    if (winfo.addr[i] == 0)
       return i;
   }
   return -1;
 }
 
-void free_address_mapping(int idx) {
-  addr_mappings.addr[idx] = 0;
-  addr_mappings.length[idx] = 0;
-  addr_mappings.n_loaded_pages[idx] = 0;
-  addr_mappings.total_mmaps--;
-}
-
-void free_metainfo_mappings(int idx) {
-  metainfo_mappings.fd[idx] = 0;
-  metainfo_mappings.flags[idx] = 0;
-  metainfo_mappings.total_metainfo--;
-}
-
 void free_lazy_idx(int idx) {
   dprintf(4, "free_lazy_idx()\n");
-  free_address_mapping(idx);
-  free_metainfo_mappings(idx);
-  // show_lazy_mappings();
-}
-
-void add_address_mapping(uint addr, int length, int idx) {
-  dprintf(4,"add_address_mapping()\n");
-  addr_mappings.addr[idx] = addr;
-  addr_mappings.length[idx] = length;
-  addr_mappings.n_loaded_pages[idx] = 0;
-  addr_mappings.total_mmaps++;
-}
-
-void add_metainfo_mapping(int fd, int flags, int idx) {
-  dprintf(4,"add_metainfo_mapping()\n");
-  metainfo_mappings.fd[idx] = fd;
-  metainfo_mappings.flags[idx] = flags;
-  metainfo_mappings.total_metainfo++;
+  struct proc* currproc = myproc();
+  // wmap_data wdata = myproc()->wmapdata;
+  currproc->wmapdata.winfo.addr[idx] = 0;
+  currproc->wmapdata.winfo.length[idx] = 0;
+  currproc->wmapdata.winfo.n_loaded_pages[idx] = 0;
+  currproc->wmapdata.fd[idx] = -1;
+  currproc->wmapdata.flags[idx] = -1;
+  currproc->wmapdata.winfo.total_mmaps--;
 }
 
 int add_lazy_mapping(uint addr, int length, int fd, int flags) {
@@ -99,17 +68,33 @@ int add_lazy_mapping(uint addr, int length, int fd, int flags) {
     dprintf(1,"More than %d wmaps\n", MAX_WMMAP_INFO);
     return -1;
   }
+  struct proc* currproc = myproc();
+  // wmap_data wdata = myproc()->wmapdata;
+  // wdata.winfo.addr[idx] = addr;
+  // wdata.winfo.length[idx] = length;
+  // wdata.winfo.n_loaded_pages[idx] = 0;
+  // wdata.fd[idx] = fd;
+  // wdata.flags[idx] = flags;
+  // wdata.winfo.total_mmaps++;
 
-  add_address_mapping(addr, length, idx);
-  add_metainfo_mapping(fd, flags, idx);
+  currproc->wmapdata.winfo.addr[idx] = addr;
+  currproc->wmapdata.winfo.length[idx] = length;
+  currproc->wmapdata.winfo.n_loaded_pages[idx] = 0;
+  currproc->wmapdata.fd[idx] = fd;
+  currproc->wmapdata.flags[idx] = flags;
+  currproc->wmapdata.winfo.total_mmaps++;
+
+  // dprintf(4, "mappings right after adding new wmap at idx: %d\n", idx);
+  // show_lazy_mappings();
   return 0;
 }
 
 int lazily_mapped_index(uint addr) {
+  struct wmapinfo winfo = myproc()->wmapdata.winfo;
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
-    uint start = addr_mappings.addr[i];
+    uint start = winfo.addr[i];
     if (start > 0) {
-      uint end = start + addr_mappings.length[i];
+      uint end = start + winfo.length[i];
       if (addr >= start && addr < end)
         return i;
     }
@@ -195,7 +180,7 @@ int do_real_mapping(uint addr, int idx) {
   if (map_single_page(myproc()->pgdir, (void*)addr, PGSIZE, V2P(mem), PTE_W | PTE_U) < 0)
     return -1;
 
-  addr_mappings.n_loaded_pages[idx]++;
+  myproc()->wmapdata.winfo.n_loaded_pages[idx]++;
   // show_lazy_mappings();
   return 0;
 }
@@ -292,6 +277,9 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  memset(&p->wmapdata, 0, sizeof(wmap_data));
+  p->wmapdata.winfo.total_mmaps = 0;
+
   return p;
 }
 
@@ -326,6 +314,7 @@ userinit(void)
   // run this process. the acquire forces the above
   // writes to be visible, and the lock is also needed
   // because the assignment might not be atomic.
+  // p->wmapdata->winfo.total_mmaps = 0;
   acquire(&ptable.lock);
 
   p->state = RUNNABLE;
@@ -389,7 +378,8 @@ wunmap(uint addr)
   // uint oldsz = newsz + PGSIZE * addr_mappings.n_loaded_pages[idx];
   // dprintf(1,"oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
   // deallocuvm(myproc()->pgdir, oldsz, newsz);
-  int length = addr_mappings.length[idx];
+  wmap_data wdata = myproc()->wmapdata;
+  int length = wdata.winfo.length[idx];
   int n_pages = length / PGSIZE;
   if (length % PGSIZE)
     n_pages++;
@@ -461,12 +451,13 @@ int
 getwmapinfo(struct wmapinfo* ps)
 {
   dprintf(4, "getwmapinfo() in proc.c\n");
+  struct wmapinfo winfo = myproc()->wmapdata.winfo;
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
-    ps->addr[i] = addr_mappings.addr[i];
-    ps->length[i] = addr_mappings.length[i];
-    ps->n_loaded_pages[i] = addr_mappings.n_loaded_pages[i];
+    ps->addr[i] = winfo.addr[i];
+    ps->length[i] = winfo.length[i];
+    ps->n_loaded_pages[i] = winfo.n_loaded_pages[i];
   }
-  ps->total_mmaps = addr_mappings.total_mmaps;
+  ps->total_mmaps = winfo.total_mmaps;
   return SUCCESS;
 }
 
@@ -618,8 +609,6 @@ wait(void)
 void
 scheduler(void)
 {
-  init_lazy_maps();
-
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
