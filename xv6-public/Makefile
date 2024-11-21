@@ -169,7 +169,6 @@ UPROGS=\
 	_cat\
 	_echo\
 	_forktest\
-	_forkwmap\
 	_grep\
 	_init\
 	_kill\
@@ -179,7 +178,6 @@ UPROGS=\
 	_rm\
 	_sh\
 	_stressfs\
-	_syscalltest\
 	_usertests\
 	_wc\
 	_zombie\

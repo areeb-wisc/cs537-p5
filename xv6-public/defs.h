@@ -70,6 +70,10 @@ char*           kalloc(void);
 void            kfree(char*);
 void            kinit1(void*, void*);
 void            kinit2(void*, void*);
+void            refcountinit(void);
+void            increment_refcount(uint);
+void            decrement_refcount(uint);
+int             getrefcount(uint);
 
 // kbd.c
 void            kbdintr(void);
@@ -125,6 +129,7 @@ void            yield(void);
 uint            wmap(uint,int,int,int);
 int             lazily_mapped_index(uint);
 int             do_real_mapping(uint, int);
+int             do_copy_on_write(uint);
 int             wunmap(uint);
 uint            va2pa(uint);
 int             getwmapinfo(struct wmapinfo*);

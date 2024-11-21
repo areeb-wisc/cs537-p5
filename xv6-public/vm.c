@@ -6,9 +6,41 @@
 #include "mmu.h"
 #include "proc.h"
 #include "elf.h"
+#include "refcount.h"
 
 extern char data[];  // defined by kernel.ld
 pde_t *kpgdir;  // for use in scheduler()
+
+// typedef struct _refcount {
+//   int refcounts[PGSIZE * PGSIZE];
+//   struct spinlock* reflock;
+// } countholder;
+
+// countholder global_refcount;
+
+// uint va2idx(uint addr) { 
+//   return addr / PGSIZE;
+// }
+
+// void increment_refcount(uint addr) {
+//   acquire(&global_refcount.reflock);
+//   global_refcount.refcounts[va2idx(addr)]++;
+//   release(&global_refcount.reflock);
+// }
+
+// void decrement_refcount(uint addr) {
+//   acquire(&global_refcount.reflock);
+//   global_refcount.refcounts[va2idx(addr)]--;
+//   release(&global_refcount.reflock);
+// }
+
+// int getrefcount(uint addr) {
+//   int count = 0;
+//   acquire(&global_refcount.reflock);
+//   count = global_refcount.refcounts[va2idx(addr)];
+//   release(&global_refcount.reflock);
+//   return count;
+// }
 
 // Set up CPU's kernel segment descriptors.
 // Run once on entry on each CPU.
@@ -60,10 +92,10 @@ walkpgdir(pde_t *pgdir, const void *va, int alloc)
 static int
 mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
 {
-  // dprintf("mappages() original\n");
-  // dprintf("pgdir = 0x%x\n", *pgdir);
-  // dprintf("va = 0x%x\n", va);
-  // dprintf("pa = 0x%x\n", pa);
+  // dprintf(3,"mappages() original\n");
+  // dprintf(3,"*pgdir = 0x%x\n", *pgdir);
+  // dprintf(3,"*va = 0x%x\n", va);
+  // dprintf(3,"*pa = 0x%x\n", pa);
   char *a, *last;
   pte_t *pte;
 
@@ -75,11 +107,16 @@ mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm)
     if(*pte & PTE_P)
       panic("remap");
     *pte = pa | perm | PTE_P;
+    // dprintf(3, "incrementing refcount of 0x%x\n", pa);
+    // cprintf("incrementing refcount of 0x%x\n", pa);
+    increment_refcount(pa);
+    // dprintf(4, "refcount(0x%x) = %d\n", pa, getrefcount(pa));
     if(a == last)
       break;
     a += PGSIZE;
     pa += PGSIZE;
   }
+  
   return 0;
 }
 
@@ -186,6 +223,7 @@ switchuvm(struct proc *p)
 void
 inituvm(pde_t *pgdir, char *init, uint sz)
 {
+  // dprintf(4, "inituvm()\n");
   char *mem;
 
   if(sz >= PGSIZE)
@@ -225,8 +263,8 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
-  // dprintf("allocuvm()\n");
-  // dprintf("oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
+  dprintf(4, "allocuvm()\n");
+  dprintf(4, "oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
   char *mem;
   uint a;
 
@@ -265,6 +303,7 @@ allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 int
 deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
+  // dprintf(4, "deallocuvm()\n");
   pte_t *pte;
   uint a, pa;
 
@@ -280,8 +319,11 @@ deallocuvm(pde_t *pgdir, uint oldsz, uint newsz)
       pa = PTE_ADDR(*pte);
       if(pa == 0)
         panic("kfree");
-      char *v = P2V(pa);
-      kfree(v);
+      decrement_refcount(pa);
+      if (getrefcount(pa) == 0) {
+        char *v = P2V(pa);
+        kfree(v);
+      }
       *pte = 0;
     }
   }
@@ -320,10 +362,73 @@ clearpteu(pde_t *pgdir, char *uva)
   *pte &= ~PTE_U;
 }
 
-// Given a parent process's page table, create a copy
-// of it for a child.
+// // Given a parent process's page table, create a copy
+// // of it for a child.
+// pde_t*
+// copyuvm(pde_t *pgdir, uint sz)
+// {
+//   pde_t *d;
+//   pte_t *pte;
+//   uint pa, i, flags;
+//   char *mem;
+
+//   if((d = setupkvm()) == 0) // set up child process's pgdir with kernel mappings
+//     return 0;
+//   for(i = 0; i < sz; i += PGSIZE){ // for each page in parent's user memory
+
+//     // get pte for page table tables
+//     // this might be 0 for wmapped regions which haven't been accessed yet
+//     // in fact, if this is zero, can we say this is a wmapped region?
+//     // so we don't need to copy them (we can't becuse these pages haven't even been mapped in parent yet)
+
+//     // Address i:
+//     // 1. non wmapped: mapped at pa, make pte read-only, map i to pa
+//     // 2. wmapped, not yet mapped (*pte = 0): skip mapping in child as well, and go to next page
+//     // 3. wmapped, mapped, anonymous: mapped at pa, make pte read-only, map i to pa
+//     // (as it has already been mapped, it is the same as non wmapped region)
+//     // 4. wmapped, mapped, shared: mapped at pa, keep original permissions, map i to pa
+
+//     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+//       panic("copyuvm: pte should exist");
+//     if(!(*pte & PTE_P))
+//       panic("copyuvm: page not present");
+//     pa = PTE_ADDR(*pte); // get physical address
+//     flags = PTE_FLAGS(*pte); // get flags
+    
+//     if (flags & PTE_W) {
+//       flags &= ~(PTE_W); // mark read-only
+//       *pte = pa | flags; // update parent page-table
+//     } 
+//     mappages(d, (void*)i, PGSIZE, pa, flags);
+
+
+
+//     // for regular fork, create a new page, (but we're not doing this)
+//     // for shared memory, we can directly use pa instead of V2P(mem)
+//     // because we want this section to be shared b/w across forks
+//     // also think where to read form fd in shared memory
+//     // also set flags to read only here for COW implementation
+//     // i.e. if this is a wmapped page, keep original permissions, directly map it to child
+//     // else mark page as read only, and directly map to child, increment reference count
+
+//     // move below section to actual mapping on COW
+//     // if((mem = kalloc()) == 0) 
+//     //   goto bad;
+//     // memmove(mem, (char*)P2V(pa), PGSIZE);
+//     // if(mappages(d, (void*)i, PGSIZE, V2P(mem), flags) < 0) {
+//     //   kfree(mem);
+//     //   goto bad;
+//     // }
+//   }
+//   return d;
+
+// bad:
+//   freevm(d);
+//   return 0;
+// }
+
 pde_t*
-copyuvm(pde_t *pgdir, uint sz)
+copyuvm2(pde_t *pgdir, uint sz)
 {
   pde_t *d;
   pte_t *pte;
@@ -334,32 +439,13 @@ copyuvm(pde_t *pgdir, uint sz)
     return 0;
   for(i = 0; i < sz; i += PGSIZE){ // for each page in parent's user memory
 
-    // get pte for page table tables
-    // this might be 0 for wmapped regions which haven't been accessed yet
-    // in fact, if this is zero, can we say this is a wmapped region?
-    // so we don't need to copy them (we can't becuse these pages haven't even been mapped in parent yet)
-
-    // Address i:
-    // 1. non wmapped: mapped at pa, make pte read-only, map i to pa
-    // 2. wmapped, not yet mapped (*pte = 0): skip mapping in child as well, and go to next page
-    // 3. wmapped, mapped, anonymous: mapped at pa, make pte read-only, map i to pa
-    // (as it has already been mapped, it is the same as non wmapped region)
-    // 4. wmapped, mapped, shared: mapped at pa, keep original permissions, map i to pa
-
     if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
       panic("copyuvm: pte should exist");
     if(!(*pte & PTE_P))
       panic("copyuvm: page not present");
     pa = PTE_ADDR(*pte); // get physical address
     flags = PTE_FLAGS(*pte); // get flags
-
-    // for regular fork, create a new page, (but we're not doing this)
-    // for shared memory, we can directly use pa instead of V2P(mem)
-    // because we want this section to be shared b/w across forks
-    // also think where to read form fd in shared memory
-    // also set flags to read only here for COW implementation
-    // i.e. if this is a wmapped page, keep original permissions, directly map it to child
-    // else mark page as read only, and directly map to child, increment reference count
+      
     if((mem = kalloc()) == 0) 
       goto bad;
     memmove(mem, (char*)P2V(pa), PGSIZE);
@@ -374,6 +460,46 @@ bad:
   freevm(d);
   return 0;
 }
+
+// Given a parent process's page table, create a copy
+// of it for a child.
+pde_t*
+copyuvm(pde_t *pgdir, uint sz)
+{
+  pde_t *d;
+  pte_t *pte;
+  uint pa, i, flags;
+
+  if((d = setupkvm()) == 0) // set up child process's pgdir with kernel mappings
+    return 0;
+  for(i = 0; i < sz; i += PGSIZE){ // for each page in parent's user memory
+
+    dprintf(4,"copying addr: 0x%x from pid: %d\n", i, myproc()->pid);
+    if((pte = walkpgdir(pgdir, (void *) i, 0)) == 0)
+      panic("copyuvm: pte should exist");
+    if(!(*pte & PTE_P))
+      panic("copyuvm: page not present");
+    pa = PTE_ADDR(*pte); // get physical address
+    flags = PTE_FLAGS(*pte); // get flags
+    dprintf(4, "pa = 0x%x, flags = 0x%x\n", pa, flags);
+    
+    if (flags & PTE_W) {
+      dprintf(4, "PTE_W is set, making it read only\n");
+      flags &= ~(PTE_W); // mark read-only
+      dprintf(4, "flags after negating PTE_W = 0x%x\n", flags);
+      flags |= PTE_COW;
+      dprintf(4, "flags after setting COW bit = 0x%x\n", flags);
+      *pte = pa | flags; // update parent page-table
+      // lcr3(V2P(pgdir)); // flush TLB
+    }
+    if (mappages(d, (void*)i, PGSIZE, pa, flags) < 0) {
+      freevm(d);
+      return 0;
+    }
+  }
+  return d;
+}
+
 
 //PAGEBREAK!
 // Map user virtual address to kernel address.

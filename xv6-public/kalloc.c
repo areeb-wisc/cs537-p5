@@ -8,6 +8,7 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "spinlock.h"
+#include "refcount.h"
 
 void freerange(void *vstart, void *vend);
 extern char end[]; // first address after kernel loaded from ELF file
@@ -22,6 +23,38 @@ struct {
   int use_lock;
   struct run *freelist;
 } kmem;
+
+countholder global_refcount;
+
+uint va2idx(uint addr) { 
+  return addr / PGSIZE;
+}
+
+void increment_refcount(uint addr) {
+  if (kmem.use_lock == 1) {
+    acquire(&global_refcount.reflock);
+    global_refcount.refcounts[va2idx(addr)]++;
+    release(&global_refcount.reflock);
+  }
+}
+
+void decrement_refcount(uint addr) {
+  if (kmem.use_lock == 1) {
+    acquire(&global_refcount.reflock);
+    global_refcount.refcounts[va2idx(addr)]--;
+    release(&global_refcount.reflock);
+  }
+}
+
+int getrefcount(uint addr) {
+  int count = 0;
+  if (kmem.use_lock == 1) {
+    acquire(&global_refcount.reflock);
+    count = global_refcount.refcounts[va2idx(addr)];
+    release(&global_refcount.reflock);
+  }
+  return count;
+}
 
 // Initialization happens in two phases.
 // 1. main() calls kinit1() while still using entrypgdir to place just
@@ -41,6 +74,13 @@ kinit2(void *vstart, void *vend)
 {
   freerange(vstart, vend);
   kmem.use_lock = 1;
+}
+
+void
+refcountinit()
+{
+  initlock(&global_refcount.reflock, "reflock");
+  memset(global_refcount.refcounts, 0, sizeof(global_refcount.refcounts));
 }
 
 void
