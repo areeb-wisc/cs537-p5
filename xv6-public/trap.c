@@ -133,7 +133,7 @@ trap(struct trapframe *tf)
       dprintf(2,"Pagefault handling failed for addr: 0x%x\n", addr);
       cprintf("Segmentation Fault\n");
       myproc()->killed = 1;
-      break;
+      // break;
     }
 
   //PAGEBREAK: 13

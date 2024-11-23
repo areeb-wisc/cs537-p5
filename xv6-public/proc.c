@@ -5,7 +5,10 @@
 #include "mmu.h"
 #include "x86.h"
 #include "proc.h"
+#include "fs.h"
 #include "spinlock.h"
+#include "sleeplock.h"
+#include "file.h"
 #include "wmap.h"
 
 struct {
@@ -77,6 +80,9 @@ int add_lazy_mapping(uint addr, int length, int fd, int flags) {
   // wdata.flags[idx] = flags;
   // wdata.winfo.total_mmaps++;
 
+  struct file* f = currproc->ofile[fd];
+  filedup(f);
+  
   currproc->wmapdata.winfo.addr[idx] = addr;
   currproc->wmapdata.winfo.length[idx] = length;
   currproc->wmapdata.winfo.n_loaded_pages[idx] = 0;
@@ -178,10 +184,35 @@ int do_real_mapping(uint addr, int idx) {
   if (mem == 0)
     panic("Kernel OOM!\n");
   memset(mem, 0, PGSIZE);
-  if (map_single_page(myproc()->pgdir, (void*)addr, V2P(mem), PTE_W | PTE_U) < 0)
+
+  struct proc* currproc = myproc();
+  if (map_single_page(currproc->pgdir, (void*)addr, V2P(mem), PTE_W | PTE_U) < 0)
     return -1;
 
-  myproc()->wmapdata.winfo.n_loaded_pages[idx]++;
+  currproc->wmapdata.winfo.n_loaded_pages[idx]++;
+
+  int flags = currproc->wmapdata.flags[idx];
+
+  if (!(flags & MAP_ANONYMOUS)) {
+    // now load from fd into mem
+    uint start_addr = currproc->wmapdata.winfo.addr[idx];
+    int fd = currproc->wmapdata.fd[idx];
+    int wmaplength = currproc->wmapdata.winfo.length[idx];
+    uint offset = addr - start_addr;
+    uint remaining = start_addr + wmaplength - addr;
+    if (remaining > PGSIZE)
+      remaining = PGSIZE;
+    struct file* f = currproc->ofile[fd];
+    dprintf(0, "reading %d bytes at offset %d from fd = %d into addr = 0x%x\n", remaining, offset, fd, addr);
+    int r;
+    begin_op();
+    ilock(f->ip);
+    r = readi(f->ip, (void*)addr, offset, remaining);
+    iunlock(f->ip);
+    end_op();
+    dprintf(0, "bytes read = %d\n", r);
+  }
+
   // show_lazy_mappings();
   return 0;
 }
@@ -415,12 +446,14 @@ wunmap(uint addr)
   int idx = lazily_mapped_index(addr);
   if (idx == -1)
     return FAILED;
-  wmap_data wdata = myproc()->wmapdata;
+
+  struct proc* currproc = myproc();  
+  wmap_data wdata = currproc->wmapdata;
   int length = wdata.winfo.length[idx];
   int n_pages = length / PGSIZE;
   if (length % PGSIZE)
     n_pages++;
-  pte_t* pgdir = myproc()->pgdir;
+  pte_t* pgdir = currproc->pgdir;
   pte_t *pte;
   uint a = addr;
   while (n_pages--) {
@@ -431,6 +464,26 @@ wunmap(uint addr)
       if(pa == 0)
         panic("kfree");
       decrement_refcount(pa);
+      int flags = currproc->wmapdata.flags[idx];
+      if (!(flags & MAP_ANONYMOUS)) {
+        // now load from fd into mem
+        uint start_addr = currproc->wmapdata.winfo.addr[idx];
+        int fd = currproc->wmapdata.fd[idx];
+        int wmaplength = currproc->wmapdata.winfo.length[idx];
+        uint offset = a - start_addr;
+        uint remaining = start_addr + wmaplength - a;
+        if (remaining > PGSIZE)
+          remaining = PGSIZE;
+        struct file* f = currproc->ofile[fd];
+        dprintf(0, "writing %d bytes at offset %d from addr = 0x%x into fd = %d\n", remaining, offset, a, fd);
+        int r;
+        begin_op();
+        ilock(f->ip);
+        r = writei(f->ip, (void*)a, offset, remaining);
+        iunlock(f->ip);
+        end_op();
+        dprintf(0, "bytes written = %d\n", r);
+      }
       if (getrefcount(pa) == 0) {
         char *v = P2V(pa);
         kfree(v);
@@ -514,10 +567,6 @@ pde_t* copywmap(pde_t* child_pgdir) {
       flags = PTE_FLAGS(*pte); // get flags
       
       if (flags & MAP_ANONYMOUS) { // set it for COW
-        // flags &= ~(PTE_W); // mark read-only
-        // flags |= PTE_COW;
-        // *pte = pa | flags; // update parent page-table
-        // lcr3(V2P(pgdir)); // flush TLB
         char* mem = kalloc();
         if (mem == 0) {
           freevm(child_pgdir);
@@ -552,7 +601,7 @@ void freewmaps() {
 int
 fork(void)
 {
-  dprintf(0, "fork called()\n");
+  dprintf(4, "fork called()\n");
   int i, pid;
   struct proc *np;
   struct proc *curproc = myproc();
@@ -561,7 +610,7 @@ fork(void)
   if((np = allocproc()) == 0){
     return -1;
   }
-  dprintf(0, "allocproc() complete\n");
+  dprintf(4, "allocproc() complete\n");
   // Copy process state from proc.
   if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
     kfree(np->kstack);
@@ -570,7 +619,7 @@ fork(void)
     return -1;
   }
   // if (curproc != initproc) {
-    dprintf(0, "copyuvm() complete\n");
+    dprintf(4, "copyuvm() complete\n");
     if((np->pgdir = copywmap(np->pgdir)) == 0){
       kfree(np->kstack);
       np->kstack = 0;
@@ -578,7 +627,7 @@ fork(void)
       return -1;
     }
   // }
-  dprintf(0, "copywmap() complete\n");
+  dprintf(4, "copywmap() complete\n");
   np->sz = curproc->sz;
   np->parent = curproc;
   *np->tf = *curproc->tf;
@@ -590,13 +639,13 @@ fork(void)
     if(curproc->ofile[i])
       np->ofile[i] = filedup(curproc->ofile[i]);
   np->cwd = idup(curproc->cwd);
-  dprintf(0, "copying fd complete\n");
+  dprintf(4, "copying fd complete\n");
 
   safestrcpy(np->name, curproc->name, sizeof(curproc->name));
-  dprintf(0, "copying name complete\n");
+  dprintf(4, "copying name complete\n");
 
   pid = np->pid;
-  dprintf(0, "pid %d forked pid: %d\n", curproc->pid, pid);
+  dprintf(4, "pid %d forked pid: %d\n", curproc->pid, pid);
 
   acquire(&ptable.lock);
 
