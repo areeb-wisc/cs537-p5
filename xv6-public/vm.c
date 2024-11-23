@@ -263,8 +263,8 @@ loaduvm(pde_t *pgdir, char *addr, struct inode *ip, uint offset, uint sz)
 int
 allocuvm(pde_t *pgdir, uint oldsz, uint newsz)
 {
-  dprintf(4, "allocuvm()\n");
-  dprintf(4, "oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
+  dprintf(5, "allocuvm()\n");
+  dprintf(5, "oldsz = 0x%x, newsz = 0x%x\n", oldsz, newsz);
   char *mem;
   uint a;
 
@@ -486,9 +486,9 @@ copyuvm(pde_t *pgdir, uint sz)
     if (flags & PTE_W) {
       dprintf(4, "PTE_W is set, making it read only\n");
       flags &= ~(PTE_W); // mark read-only
-      dprintf(4, "flags after negating PTE_W = 0x%x\n", flags);
+      dprintf(5, "flags after negating PTE_W = 0x%x\n", flags);
       flags |= PTE_COW;
-      dprintf(4, "flags after setting COW bit = 0x%x\n", flags);
+      dprintf(5, "flags after setting COW bit = 0x%x\n", flags);
       *pte = pa | flags; // update parent page-table
       // lcr3(V2P(pgdir)); // flush TLB
     }

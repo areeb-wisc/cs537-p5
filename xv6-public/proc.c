@@ -24,10 +24,10 @@ extern void trapret(void);
 
 static void wakeup1(void *chan);
 
-void show_lazy_mappings() {
+void show_lazy_mappings(struct proc* p) {
   cprintf("Lazy mappings:\n\n");
-  cprintf("idx\taddr\t\tlength\tkern_addr\t\tloaded\tfd\tflags\n");
-  wmap_data wdata = myproc()->wmapdata;
+  cprintf("idx\taddr\t\tlength\tloaded\tfd\tflags\n");
+  wmap_data wdata = p->wmapdata;
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
     int addr = wdata.winfo.addr[i];
     if (addr > 0) {
@@ -141,42 +141,42 @@ static pte_t* walkpgdir(pde_t *pgdir, const void *va, int alloc) {
   pde_t *pde;
   pte_t *pgtab;
 
-  dprintf(3,"using top 10 bits = %d of va = 0x%x to index into *pgdir at 0x%x\n", PDX(va), va, *pgdir);
+  dprintf(5,"using top 10 bits = %d of va = 0x%x to index into *pgdir at 0x%x\n", PDX(va), va, *pgdir);
   pde = &pgdir[PDX(va)];
   // dprintf(3,"pde  = 0x%x\n", pde);
-  dprintf(3,"*pde before = 0x%x\n", *pde);
+  dprintf(5,"*pde before = 0x%x\n", *pde);
   if(*pde & PTE_P){
-    dprintf(3, "PDE exists for 0x%x\n", va);
-    dprintf(3, "*pde = 0x%x\n", *pde);
+    dprintf(5, "PDE exists for 0x%x\n", va);
+    dprintf(5, "*pde = 0x%x\n", *pde);
     pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
     // dprintf(3,"pgtab1 = 0x%x\n", pgtab);
-    dprintf(3,"*pgtab1 = 0x%x\n", *pgtab);
+    dprintf(5,"*pgtab1 = 0x%x\n", *pgtab);
   } else {
-    dprintf(3, "PDE does not exist for 0x%x, alloc = %d\n", va, alloc);
+    dprintf(5, "PDE does not exist for 0x%x, alloc = %d\n", va, alloc);
     if(!alloc)
       return 0;
     // pgtab = (pte_t*)(ka);
     pgtab = (pte_t*)kalloc();
-    dprintf(3, "kalloced new page for page table at pgtab = 0x%x, currently it has garbage, *pgtab = 0x%x\n", pgtab, *pgtab);
+    dprintf(5, "kalloced new page for page table at pgtab = 0x%x, currently it has garbage, *pgtab = 0x%x\n", pgtab, *pgtab);
     // dprintf(3,"pgtab2 = 0x%x\n", pgtab);
     if (pgtab == 0)
       return 0;
     // Make sure all those PTE_P bits are zero.
-    dprintf(3, "allocated all 0s in newly allocated page table page\n");
+    dprintf(5, "allocated all 0s in newly allocated page table page\n");
     memset(pgtab, 0, PGSIZE);
-    dprintf(3,"*pgtab2 = 0x%x\n", *pgtab);
-    dprintf(3, "pgtab2[1] = 0x%x\n", pgtab[1]);
+    dprintf(5,"*pgtab2 = 0x%x\n", *pgtab);
+    dprintf(5, "pgtab2[1] = 0x%x\n", pgtab[1]);
     // The permissions here are overly generous, but they can
     // be further restricted by the permissions in the page table
     // entries, if necessary.
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
-    dprintf(3,"marked *pde with *pte and permissions\n");
-    dprintf(3,"*pde after = 0x%x\n", *pde);
+    dprintf(5,"marked *pde with *pte and permissions\n");
+    dprintf(5,"*pde after = 0x%x\n", *pde);
   }
-  dprintf(3, "now using middle 10 bits = %d of va = 0x%x to index into *pgtab = 0x%x\n", PTX(va), va, *pgtab);
-  dprintf(2,"*pte = 0x%x\n", pgtab[PTX(va)]);
-  dprintf(3,"\nSUMMARY:\n");
-  dprintf(3, "*pgdir = 0x%x\n*pde = 0x%x\n*pgtab = 0x%x\n*pte = 0x%x\n\n", *pgdir, *pde, *pgtab, pgtab[PTX(va)]);
+  dprintf(5, "now using middle 10 bits = %d of va = 0x%x to index into *pgtab = 0x%x\n", PTX(va), va, *pgtab);
+  dprintf(5,"*pte = 0x%x\n", pgtab[PTX(va)]);
+  dprintf(5,"\nSUMMARY:\n");
+  dprintf(4, "*pgdir = 0x%x\n*pde = 0x%x\n*pgtab = 0x%x\n*pte = 0x%x\n\n", *pgdir, *pde, *pgtab, pgtab[PTX(va)]);
   return &pgtab[PTX(va)];
 }
 
@@ -192,6 +192,7 @@ static int map_single_page(pde_t *pgdir, void *va, uint pa, int perm) {
   *pte = pa | perm | PTE_P;
   increment_refcount(pa);
   dprintf(2,"*pte after = 0x%x\n", *pte);
+  dprintf(5, "refcount(0x%x) = %d\n", pa, getrefcount(pa));
   return 0;
 }
 
@@ -211,7 +212,8 @@ int do_real_mapping(uint addr, int idx) {
   memset(mem, 0, PGSIZE);
 
   struct proc* currproc = myproc();
-  if (map_single_page(currproc->pgdir, (void*)addr, V2P(mem), PTE_W | PTE_U) < 0)
+  uint aligned = PGROUNDDOWN(addr);
+  if (map_single_page(currproc->pgdir, (void*)aligned, V2P(mem), PTE_W | PTE_U) < 0)
     return -1;
 
   currproc->wmapdata.winfo.n_loaded_pages[idx]++;
@@ -232,7 +234,7 @@ int do_real_mapping(uint addr, int idx) {
     int r;
     begin_op();
     ilock(f->ip);
-    r = readi(f->ip, (void*)addr, offset, remaining);
+    r = readi(f->ip, (void*)aligned, offset, remaining);
     iunlock(f->ip);
     end_op();
     dprintf(0, "bytes read = %d\n", r);
@@ -271,8 +273,8 @@ int do_copy_on_write(uint addr) {
     panic("Kernel OOM!\n");
   
   memmove(mem, (char*)P2V(pa), PGSIZE);
-
-  if (map_single_page(myproc()->pgdir, (void*)addr, V2P(mem), flags) < 0) {
+  uint aligned = PGROUNDDOWN(addr);
+  if (map_single_page(myproc()->pgdir, (void*)aligned, V2P(mem), flags) < 0) {
     kfree(mem);
     return -1;
   }
@@ -465,9 +467,9 @@ wmap(uint addr, int length, int flags, int fd)
 }
 
 int
-wunmap(uint addr)
+wunmap_handler(uint addr, int freeidx)
 {
-  dprintf(2,"wunmap()\n");
+  dprintf(2,"wunmap_handler(freeidx = %d)\n", freeidx);
   int idx = lazily_mapped_index(addr);
   if (idx == -1)
     return FAILED;
@@ -488,7 +490,10 @@ wunmap(uint addr)
       uint pa = PTE_ADDR(*pte);
       if(pa == 0)
         panic("kfree");
+      dprintf(4, "va 0x%x had been lazily mapped to 0x%x, removing mapping\n", a, pa);
+      dprintf(4, "refcount(0x%x) before: %d\n", getrefcount(pa));
       decrement_refcount(pa);
+      dprintf(4, "refcount(0x%x) after: %d\n", getrefcount(pa));
       int flags = currproc->wmapdata.flags[idx];
       if (!(flags & MAP_ANONYMOUS)) {
         // now load from fd into mem
@@ -510,6 +515,7 @@ wunmap(uint addr)
         dprintf(0, "bytes written = %d\n", r);
       }
       if (getrefcount(pa) == 0) {
+        dprintf(4, "This was the last one, freeing 0x%x\n", pa);
         char *v = P2V(pa);
         kfree(v);
       }
@@ -517,8 +523,13 @@ wunmap(uint addr)
     }
     a += PGSIZE;
   }
-  free_lazy_idx(idx);
+  if (freeidx)
+    free_lazy_idx(idx);
   return SUCCESS;
+}
+
+int wunmap(uint addr) {
+  return  wunmap_handler(addr, 1);
 }
 
 uint va2pa(uint addr)
@@ -573,39 +584,45 @@ getwmapinfo(struct wmapinfo* ps)
   return SUCCESS;
 }
 
+void copywmapdata(struct proc* np) {
+  dprintf(4, "copywmapdata()\n");
+  struct proc* currproc = myproc();
+  for (int i = 0; i < MAX_WMMAP_INFO; i++) {
+    np->wmapdata.fd[i] = currproc->wmapdata.fd[i];
+    np->wmapdata.flags[i] = currproc->wmapdata.flags[i];
+    np->wmapdata.winfo.addr[i] = currproc->wmapdata.winfo.addr[i];
+    np->wmapdata.winfo.length[i] = currproc->wmapdata.winfo.length[i];
+    np->wmapdata.winfo.n_loaded_pages[i] = currproc->wmapdata.winfo.n_loaded_pages[i];
+  }
+  np->wmapdata.winfo.total_mmaps = currproc->wmapdata.winfo.total_mmaps;
+  // dprintf(4, "after copying:\n");
+  // show_lazy_mappings(np);
+}
+
 pde_t* copywmap(pde_t* child_pgdir) {
   struct proc* currproc = myproc();
   pde_t* pgdir = currproc->pgdir;
   pte_t *pte;
-  uint va, pa, i, flags;
+  uint pa, start_addr, length, i, flags;
 
   for (i = 0; i < MAX_WMMAP_INFO; i++) {
-    va = currproc->wmapdata.winfo.addr[i];
-    if (va > 0) {
-      dprintf(4, "copying wmap at va: 0x%x\n", va);
-      if((pte = walkpgdir(pgdir, (void *) va, 0)) == 0)
-        panic("copywmap: pte should exist");
-      if(!(*pte & PTE_P))
-        panic("copywmap: page not present");
+    start_addr = currproc->wmapdata.winfo.addr[i];
+    if (start_addr > 0) {
+      dprintf(4, "copying wmap at va: 0x%x\n", start_addr);
+      length = currproc->wmapdata.winfo.length[i];
+      for (uint va = start_addr; va < start_addr + length; va += PGSIZE) {        
+        pte = walkpgdir(pgdir, (void *) va, 0);
+        if (pte != 0) {
+          if(!(*pte & PTE_P))
+            panic("copywmap: page not present");
 
-      pa = PTE_ADDR(*pte); // get physical address
-      flags = PTE_FLAGS(*pte); // get flags
-      
-      if (flags & MAP_ANONYMOUS) { // set it for COW
-        char* mem = kalloc();
-        if (mem == 0) {
-          freevm(child_pgdir);
-          return 0;
-        }
-        memmove(mem, (char*)P2V(pa), PGSIZE);
-        if (map_single_page(child_pgdir, (void*)va, V2P(mem), flags) < 0) {
-          freevm(child_pgdir);
-          return 0;
-        }
-      } else {
-        if (map_single_page(child_pgdir, (void*)va, pa, flags) < 0) {
-          freevm(child_pgdir);
-          return 0;
+          pa = PTE_ADDR(*pte); // get physical address
+          flags = PTE_FLAGS(*pte); // get flags
+          
+          if (map_single_page(child_pgdir, (void*)va, pa, flags) < 0) {
+            freevm(child_pgdir);
+            return 0;
+          }
         }
       }
     }
@@ -614,10 +631,11 @@ pde_t* copywmap(pde_t* child_pgdir) {
 }
 
 void freewmaps() {
+  dprintf(3, "freewmaps()\n");
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
     uint addr = myproc()->wmapdata.winfo.addr[i];
     if (addr > 0)
-      wunmap(addr);
+      wunmap_handler(addr, 0);
   }
 }
 
@@ -644,15 +662,16 @@ fork(void)
     np->state = UNUSED;
     return -1;
   }
-  // if (curproc != initproc) {
-    dprintf(4, "copyuvm() complete\n");
-    if((np->pgdir = copywmap(np->pgdir)) == 0){
-      kfree(np->kstack);
-      np->kstack = 0;
-      np->state = UNUSED;
-      return -1;
-    }
-  // }
+  dprintf(4, "copyuvm() complete\n");
+  copywmapdata(np);
+  dprintf(4, "copywmapdata() complete\n");
+
+  if((np->pgdir = copywmap(np->pgdir)) == 0){
+    kfree(np->kstack);
+    np->kstack = 0;
+    np->state = UNUSED;
+    return -1;
+  }
   dprintf(4, "copywmap() complete\n");
   np->sz = curproc->sz;
   np->parent = curproc;
@@ -694,6 +713,8 @@ exit(void)
 
   if(curproc == initproc)
     panic("init exiting");
+  dprintf(3, "exit()\n");
+  freewmaps();
 
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
@@ -751,7 +772,6 @@ wait(void)
         kfree(p->kstack);
         p->kstack = 0;
         freevm(p->pgdir);
-        freewmaps();
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;

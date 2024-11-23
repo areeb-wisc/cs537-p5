@@ -108,9 +108,10 @@ dprintf(int level, char *fmt, ...)
 {
   if (level > DEBUG_LEVEL)
     return;
-   
-  // int pid = myproc()->pid;
-  // cprintf("PID: %d | ", pid);
+
+  struct proc* currproc = myproc();
+  if (currproc)
+    cprintf("PID: %d | ", currproc->pid);
 
   int i, c, locking;
   uint *argp;
