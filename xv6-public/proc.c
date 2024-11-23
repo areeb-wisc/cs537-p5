@@ -80,8 +80,10 @@ int add_lazy_mapping(uint addr, int length, int fd, int flags) {
   // wdata.flags[idx] = flags;
   // wdata.winfo.total_mmaps++;
 
-  struct file* f = currproc->ofile[fd];
-  filedup(f);
+  if (!(flags & MAP_ANONYMOUS)) {
+    struct file* f = currproc->ofile[fd];
+    filedup(f);
+  }
   
   currproc->wmapdata.winfo.addr[idx] = addr;
   currproc->wmapdata.winfo.length[idx] = length;
