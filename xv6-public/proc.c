@@ -63,6 +63,31 @@ void free_lazy_idx(int idx) {
   currproc->wmapdata.winfo.total_mmaps--;
 }
 
+int fdalloc(struct file* f) {
+
+  int fd;
+  struct proc *curproc = myproc();
+
+  for(fd = 0; fd < NOFILE; fd++){
+    if(curproc->ofile[fd] == 0){
+      curproc->ofile[fd] = f;
+      return fd;
+    }
+  }
+  return -1;
+}
+
+int dup(int fd) {
+
+  struct proc* currproc = myproc();
+  struct file *f = currproc->ofile[fd];
+  int newfd = fdalloc(f);
+  if (newfd < 0)
+    return -1;
+  filedup(f);
+  return newfd;
+}
+
 int add_lazy_mapping(uint addr, int length, int fd, int flags) {
   dprintf(4,"add_lazy_mapping()\n");
   int idx = get_free_idx();
@@ -80,10 +105,8 @@ int add_lazy_mapping(uint addr, int length, int fd, int flags) {
   // wdata.flags[idx] = flags;
   // wdata.winfo.total_mmaps++;
 
-  if (!(flags & MAP_ANONYMOUS)) {
-    struct file* f = currproc->ofile[fd];
-    filedup(f);
-  }
+  if (!(flags & MAP_ANONYMOUS))
+    fd = dup(fd);
   
   currproc->wmapdata.winfo.addr[idx] = addr;
   currproc->wmapdata.winfo.length[idx] = length;
@@ -574,6 +597,7 @@ pde_t* copywmap(pde_t* child_pgdir) {
           freevm(child_pgdir);
           return 0;
         }
+        memmove(mem, (char*)P2V(pa), PGSIZE);
         if (map_single_page(child_pgdir, (void*)va, V2P(mem), flags) < 0) {
           freevm(child_pgdir);
           return 0;
