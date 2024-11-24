@@ -8,136 +8,23 @@ build xv6 using make
 **********************************************************************
 Trying to build project using make
 make xv6.img fs.img
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -fno-pic -O -nostdinc -I. -c bootmain.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -fno-pic -nostdinc -I. -c bootasm.S
-ld -m    elf_i386 -N -e start -Ttext 0x7C00 -o bootblock.o bootasm.o bootmain.o
-objdump -S bootblock.o > bootblock.asm
-objcopy -S -O binary -j .text bootblock.o bootblock
-./sign.pl bootblock
-boot block is 451 bytes (max 510)
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o bio.o bio.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o console.o console.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o exec.o exec.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o file.o file.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o fs.o fs.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o ide.o ide.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o ioapic.o ioapic.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o kalloc.o kalloc.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o kbd.o kbd.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o lapic.o lapic.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o log.o log.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o main.o main.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o mp.o mp.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o picirq.o picirq.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o pipe.o pipe.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o proc.o proc.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o sleeplock.o sleeplock.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o spinlock.o spinlock.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o string.o string.c
-gcc -m32 -gdwarf-2 -Wa,-divide   -c -o swtch.o swtch.S
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o syscall.o syscall.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o sysfile.o sysfile.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o sysproc.o sysproc.c
-gcc -m32 -gdwarf-2 -Wa,-divide   -c -o trapasm.o trapasm.S
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o trap.o trap.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o uart.o uart.c
-./vectors.pl > vectors.S
-gcc -m32 -gdwarf-2 -Wa,-divide   -c -o vectors.o vectors.S
 gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o vm.o vm.c
-gcc -m32 -gdwarf-2 -Wa,-divide   -c -o entry.o entry.S
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -fno-pic -nostdinc -I. -c entryother.S
-ld -m    elf_i386 -N -e start -Ttext 0x7000 -o bootblockother.o entryother.o
-objcopy -S -O binary -j .text bootblockother.o entryother
-objdump -S bootblockother.o > entryother.asm
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie -nostdinc -I. -c initcode.S
-ld -m    elf_i386 -N -e start -Ttext 0 -o initcode.out initcode.o
-objcopy -S -O binary initcode.out initcode
-objdump -S initcode.o > initcode.asm
 ld -m    elf_i386 -T kernel.ld -o kernel entry.o bio.o console.o exec.o file.o fs.o ide.o ioapic.o kalloc.o kbd.o lapic.o log.o main.o mp.o picirq.o pipe.o proc.o sleeplock.o spinlock.o string.o swtch.o syscall.o sysfile.o sysproc.o trapasm.o trap.o uart.o vectors.o vm.o  -b binary initcode entryother
 objdump -S kernel > kernel.asm
 objdump -t kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > kernel.sym
 dd if=/dev/zero of=xv6.img count=10000
 10000+0 records in
 10000+0 records out
-5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.0838234 s, 61.1 MB/s
+5120000 bytes (5.1 MB, 4.9 MiB) copied, 0.0130051 s, 394 MB/s
 dd if=bootblock of=xv6.img conv=notrunc
 1+0 records in
 1+0 records out
-512 bytes copied, 6.53e-05 s, 7.8 MB/s
+512 bytes copied, 5.44e-05 s, 9.4 MB/s
 dd if=kernel of=xv6.img seek=1 conv=notrunc
-454+1 records in
-454+1 records out
-232768 bytes (233 kB, 227 KiB) copied, 0.0011126 s, 209 MB/s
-gcc -Werror -Wall -o mkfs mkfs.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o ulib.o ulib.c
-gcc -m32 -gdwarf-2 -Wa,-divide   -c -o usys.o usys.S
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o printf.o printf.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o umalloc.o umalloc.c
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o cat.o cat.c
-ld -m    elf_i386 -e main -Ttext 0 -o _cat cat.o ulib.o usys.o printf.o umalloc.o
-objdump -S _cat > cat.asm
-objdump -t _cat | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > cat.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o echo.o echo.c
-ld -m    elf_i386 -e main -Ttext 0 -o _echo echo.o ulib.o usys.o printf.o umalloc.o
-objdump -S _echo > echo.asm
-objdump -t _echo | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > echo.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o forktest.o forktest.c
-# forktest has less library code linked in - needs to be small
-# in order to be able to max out the proc table.
-ld -m    elf_i386 -N -e main -Ttext 0 -o _forktest forktest.o ulib.o usys.o
-objdump -S _forktest > forktest.asm
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o grep.o grep.c
-ld -m    elf_i386 -e main -Ttext 0 -o _grep grep.o ulib.o usys.o printf.o umalloc.o
-objdump -S _grep > grep.asm
-objdump -t _grep | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > grep.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o init.o init.c
-ld -m    elf_i386 -e main -Ttext 0 -o _init init.o ulib.o usys.o printf.o umalloc.o
-objdump -S _init > init.asm
-objdump -t _init | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > init.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o kill.o kill.c
-ld -m    elf_i386 -e main -Ttext 0 -o _kill kill.o ulib.o usys.o printf.o umalloc.o
-objdump -S _kill > kill.asm
-objdump -t _kill | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > kill.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o ln.o ln.c
-ld -m    elf_i386 -e main -Ttext 0 -o _ln ln.o ulib.o usys.o printf.o umalloc.o
-objdump -S _ln > ln.asm
-objdump -t _ln | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > ln.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o ls.o ls.c
-ld -m    elf_i386 -e main -Ttext 0 -o _ls ls.o ulib.o usys.o printf.o umalloc.o
-objdump -S _ls > ls.asm
-objdump -t _ls | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > ls.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o mkdir.o mkdir.c
-ld -m    elf_i386 -e main -Ttext 0 -o _mkdir mkdir.o ulib.o usys.o printf.o umalloc.o
-objdump -S _mkdir > mkdir.asm
-objdump -t _mkdir | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > mkdir.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o rm.o rm.c
-ld -m    elf_i386 -e main -Ttext 0 -o _rm rm.o ulib.o usys.o printf.o umalloc.o
-objdump -S _rm > rm.asm
-objdump -t _rm | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > rm.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o sh.o sh.c
-ld -m    elf_i386 -e main -Ttext 0 -o _sh sh.o ulib.o usys.o printf.o umalloc.o
-objdump -S _sh > sh.asm
-objdump -t _sh | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > sh.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o stressfs.o stressfs.c
-ld -m    elf_i386 -e main -Ttext 0 -o _stressfs stressfs.o ulib.o usys.o printf.o umalloc.o
-objdump -S _stressfs > stressfs.asm
-objdump -t _stressfs | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > stressfs.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o usertests.o usertests.c
-ld -m    elf_i386 -e main -Ttext 0 -o _usertests usertests.o ulib.o usys.o printf.o umalloc.o
-objdump -S _usertests > usertests.asm
-objdump -t _usertests | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > usertests.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o wc.o wc.c
-ld -m    elf_i386 -e main -Ttext 0 -o _wc wc.o ulib.o usys.o printf.o umalloc.o
-objdump -S _wc > wc.asm
-objdump -t _wc | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > wc.sym
-gcc -fno-pic -static -fno-builtin -fno-strict-aliasing -O2 -Wall -MD -ggdb -m32 -Werror -fno-omit-frame-pointer -fno-stack-protector -fno-pie -no-pie   -c -o zombie.o zombie.c
-ld -m    elf_i386 -e main -Ttext 0 -o _zombie zombie.o ulib.o usys.o printf.o umalloc.o
-objdump -S _zombie > zombie.asm
-objdump -t _zombie | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > zombie.sym
-./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _mkdir _rm _sh _stressfs _usertests _wc _zombie 
-nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 825 blocks have been allocated
-balloc: write bitmap block at sector 58
+455+1 records in
+455+1 records out
+233252 bytes (233 kB, 228 KiB) copied, 0.0004375 s, 533 MB/s
+make: 'fs.img' is up to date.
 
 
 test build PASSED
@@ -155,8 +42,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -166,7 +53,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 887 blocks have been allocated
+balloc: first 889 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -208,8 +95,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -219,7 +106,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 886 blocks have been allocated
+balloc: first 888 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -256,8 +143,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -267,7 +154,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 887 blocks have been allocated
+balloc: first 889 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -307,8 +194,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -318,7 +205,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 887 blocks have been allocated
+balloc: first 889 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -359,8 +246,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -370,7 +257,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 897 blocks have been allocated
+balloc: first 899 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -414,8 +301,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -425,7 +312,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 888 blocks have been allocated
+balloc: first 890 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -466,8 +353,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -477,7 +364,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 889 blocks have been allocated
+balloc: first 891 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -544,8 +431,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -555,7 +442,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 899 blocks have been allocated
+balloc: first 901 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -676,8 +563,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -687,7 +574,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 887 blocks have been allocated
+balloc: first 890 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -732,8 +619,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -743,7 +630,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 897 blocks have been allocated
+balloc: first 900 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -753,8 +640,7 @@ iPXE (https://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+1FF8B4A0+1FECB4A0 CA00
 Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
 
 
-Booting from Hard Disk...
-xv6...
+Booting from Hard Disk..xv6...
 cpu0: starting 0
 sb: size 1000 nblocks 941 ninodes 200 nlog 30 logstart 2 inodestart 32 bmap start 58
 init: starting sh
@@ -805,8 +691,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -816,7 +702,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 889 blocks have been allocated
+balloc: first 891 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -861,8 +747,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -872,7 +758,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 887 blocks have been allocated
+balloc: first 890 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -913,8 +799,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -924,7 +810,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 888 blocks have been allocated
+balloc: first 890 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -970,8 +856,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -981,7 +867,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 888 blocks have been allocated
+balloc: first 891 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1024,8 +910,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1035,7 +921,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 889 blocks have been allocated
+balloc: first 891 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1045,8 +931,7 @@ iPXE (https://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+1FF8B4A0+1FECB4A0 CA00
 Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
 
 
-Booting from Hard Disk...
-xv6...
+Booting from Hard Disk..xv6...
 cpu0: starting 0
 sb: size 1000 nblocks 941 ninodes 200 nlog 30 logstart 2 inodestart 32 bmap start 58
 init: starting sh
@@ -1105,8 +990,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1116,7 +1001,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 898 blocks have been allocated
+balloc: first 901 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1126,8 +1011,7 @@ iPXE (https://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+1FF8B4A0+1FECB4A0 CA00
 Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
 
 
-Booting from Hard Disk...
-xv6...
+Booting from Hard Disk..xv6...
 cpu0: starting 0
 sb: size 1000 nblocks 941 ninodes 200 nlog 30 logstart 2 inodestart 32 bmap start 58
 init: starting sh
@@ -1187,8 +1071,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1198,7 +1082,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 888 blocks have been allocated
+balloc: first 891 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1254,8 +1138,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1265,7 +1149,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 899 blocks have been allocated
+balloc: first 901 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1331,9 +1215,6 @@ PID: 10 | writing 4096 bytes at offset 4096 from addr = 0x60001000 into fd = 4
 PID: 10 | bytes written = 4096
 INFO: Map 1 and 2 exist in Child (pid 11). 	Okay.
 PID: 11 | writing 4096 bytes at offset 0 from addr = 0x60000000 into fd = 4
-PID: 11 | bytes written = 4096
-PID: 11 | writing 4096 bytes at offset 4096 from addr = 0x60001000 into fd = 4
-PID: 11 | bytes written = 4096
 INFO: Map 1 and 2 exist in Child (pid 12). 	Okay.
 PID: 12 | writing 4096 bytes at offset 0 from addr = 0x60000000 into fd = 4
 PID: 12 | bytes written = 4096
@@ -1344,6 +1225,9 @@ PID: 13 | writing 4096 bytes at offset 0 from addr = 0x60000000 into fd = 4
 PID: 13 | bytes written = 4096
 PID: 13 | writing 4096 bytes at offset 4096 from addr = 0x60001000 into fd = 4
 PID: 13 | bytes written = 4096
+PID: 11 | bytes written = 4096
+PID: 11 | writing 4096 bytes at offset 4096 from addr = 0x60001000 into fd = 4
+PID: 11 | bytes written = 4096
 INFO: Map 1 and 2 exist in Parent (pid 3). 	Okay.
 [0;32mSUCCESS:[0m TEST_18	 PASSED
 
@@ -1368,8 +1252,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1379,7 +1263,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 888 blocks have been allocated
+balloc: first 891 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1389,7 +1273,8 @@ iPXE (https://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+1FF8B4A0+1FECB4A0 CA00
 Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
 
 
-Booting from Hard Disk..xv6...
+Booting from Hard Disk...
+xv6...
 cpu0: starting 0
 sb: size 1000 nblocks 941 ninodes 200 nlog 30 logstart 2 inodestart 32 bmap start 58
 init: starting sh
@@ -1423,8 +1308,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1434,7 +1319,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 898 blocks have been allocated
+balloc: first 900 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1479,8 +1364,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1490,7 +1375,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 886 blocks have been allocated
+balloc: first 888 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1500,8 +1385,7 @@ iPXE (https://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+1FF8B4A0+1FECB4A0 CA00
 Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
 
 
-Booting from Hard Disk...
-xv6...
+Booting from Hard Disk..xv6...
 cpu0: starting 0
 sb: size 1000 nblocks 941 ninodes 200 nlog 30 logstart 2 inodestart 32 bmap start 58
 init: starting sh
@@ -1510,7 +1394,6 @@ tester
 
 
 TEST_21
-YOu can't change a character!
 Segmentation Fault
 $ 
 
@@ -1529,8 +1412,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1540,7 +1423,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 891 blocks have been allocated
+balloc: first 893 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1550,8 +1433,7 @@ iPXE (https://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+1FF8B4A0+1FECB4A0 CA00
 Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
 
 
-Booting from Hard Disk...
-xv6...
+Booting from Hard Disk..xv6...
 cpu0: starting 0
 sb: size 1000 nblocks 941 ninodes 200 nlog 30 logstart 2 inodestart 32 bmap start 58
 init: starting sh
@@ -1601,8 +1483,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1612,7 +1494,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 899 blocks have been allocated
+balloc: first 902 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1636,43 +1518,43 @@ INFO: Parent: arr pa = 0xDFC0000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDEC1000
+INFO: Child: arr new_pa = 0xDEC3000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDE71000
+INFO: Child: arr new_pa = 0xDE79000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDE30000
+INFO: Child: arr new_pa = 0xDE2F000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDDDF000
+INFO: Child: arr new_pa = 0xDDE6000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDD99000
+INFO: Child: arr new_pa = 0xDD9A000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDD4B000
+INFO: Child: arr new_pa = 0xDD51000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDD07000
+INFO: Child: arr new_pa = 0xDD06000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDCB9000
+INFO: Child: arr new_pa = 0xDCBD000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDC73000
+INFO: Child: arr new_pa = 0xDC74000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: modified sum = 501460
-INFO: Child: arr new_pa = 0xDCC1000
+INFO: Child: arr new_pa = 0xDC7B000
 [0;32mSUCCESS:[0m TEST_23	 PASSED
 
 $ 
@@ -1692,8 +1574,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1703,7 +1585,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 900 blocks have been allocated
+balloc: first 902 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)
@@ -1713,8 +1595,7 @@ iPXE (https://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+1FF8B4A0+1FECB4A0 CA00
 Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
 
 
-Booting from Hard Disk...
-xv6...
+Booting from Hard Disk..xv6...
 cpu0: starting 0
 sb: size 1000 nblocks 941 ninodes 200 nlog 30 logstart 2 inodestart 32 bmap start 58
 init: starting sh
@@ -1733,27 +1614,27 @@ INFO: Child sz 0xF000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: sum = 501460
-INFO: Child: arr new_pa = 0xDE6C000
+INFO: Child: arr new_pa = 0xDE77000
 INFO: Child sz 0xF000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: sum = 501460
-INFO: Child: arr new_pa = 0xDE26000
+INFO: Child: arr new_pa = 0xDE29000
 INFO: Child sz 0xF000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: sum = 501460
-INFO: Child: arr new_pa = 0xDDDA000
+INFO: Child: arr new_pa = 0xDDDD000
 INFO: Child sz 0xF000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: sum = 501460
-INFO: Child: arr new_pa = 0xDD8F000
+INFO: Child: arr new_pa = 0xDD90000
 INFO: Child sz 0xF000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: sum = 501460
-INFO: Child: arr new_pa = 0xDD41000
+INFO: Child: arr new_pa = 0xDD43000
 INFO: Child sz 0xF000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
@@ -1763,17 +1644,17 @@ INFO: Child sz 0xF000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: sum = 501460
-INFO: Child: arr new_pa = 0xDCA8000
+INFO: Child: arr new_pa = 0xDCA9000
 INFO: Child sz 0xF000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: sum = 501460
-INFO: Child: arr new_pa = 0xDC57000
+INFO: Child: arr new_pa = 0xDC5C000
 INFO: Child sz 0xF000
 Child: sum = 1012960
 INFO: Child: arr pa = 0xDFC0000
 Child: sum = 501460
-INFO: Child: arr new_pa = 0xDCAC000
+INFO: Child: arr new_pa = 0xDC63000
 INFO: Child sz 0xF000
 [0;32mSUCCESS:[0m TEST_24	 PASSED
 
@@ -1794,8 +1675,8 @@ Running xv6 user progam /mnt/c/Users/Patron/Documents/UW Madison/CS 537/cs537-do
 DEBUG: Copying header file to project path
 Trying to build project using make
 make xv6.img fs.img
-/tmp/tmpb6c64bgq/p/Makefile
-/tmp/tmpb6c64bgq/p/Makefile.test
+/tmp/tmpeuw1n44z/p/Makefile
+/tmp/tmpeuw1n44z/p/Makefile.test
 make: 'xv6.img' is up to date.
 make: 'fs.img' is up to date.
 make qemu-nox CPUS=1
@@ -1805,7 +1686,7 @@ objdump -S _tester > tester.asm
 objdump -t _tester | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$/d' > tester.sym
 ./mkfs fs.img README _cat _echo _forktest _grep _init _kill _ln _ls _tester _mkdir _rm _sh _stressfs _usertests _wc _zombie 
 nmeta 59 (boot, super, log blocks 30 inode blocks 26, bitmap blocks 1) blocks 941 total 1000
-balloc: first 888 blocks have been allocated
+balloc: first 890 blocks have been allocated
 balloc: write bitmap block at sector 58
 qemu-system-i386 -nographic -drive file=fs.img,index=1,media=disk,format=raw -drive file=xv6.img,index=0,media=disk,format=raw -smp 1 -m 512 
 c[?7l[2J[0mSeaBIOS (version 1.15.0-1)

@@ -255,7 +255,7 @@ int do_copy_on_write(uint addr) {
   if(!(*pte & PTE_P))
     panic("copyonwrite: page not present");
   if (!(*pte & PTE_COW))
-    panic("copyonwrite: COW not set!\n");
+    return -1;
     
   pa = PTE_ADDR(*pte); // get physical address
   flags = PTE_FLAGS(*pte); // get flags
