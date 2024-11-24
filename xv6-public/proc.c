@@ -54,7 +54,6 @@ int get_free_idx() {
 void free_lazy_idx(int idx) {
   dprintf(4, "free_lazy_idx()\n");
   struct proc* currproc = myproc();
-  // wmap_data wdata = myproc()->wmapdata;
   currproc->wmapdata.winfo.addr[idx] = 0;
   currproc->wmapdata.winfo.length[idx] = 0;
   currproc->wmapdata.winfo.n_loaded_pages[idx] = 0;
@@ -97,13 +96,6 @@ int add_lazy_mapping(uint addr, int length, int fd, int flags) {
     return -1;
   }
   struct proc* currproc = myproc();
-  // wmap_data wdata = myproc()->wmapdata;
-  // wdata.winfo.addr[idx] = addr;
-  // wdata.winfo.length[idx] = length;
-  // wdata.winfo.n_loaded_pages[idx] = 0;
-  // wdata.fd[idx] = fd;
-  // wdata.flags[idx] = flags;
-  // wdata.winfo.total_mmaps++;
 
   if (!(flags & MAP_ANONYMOUS))
     fd = dup(fd);
@@ -135,7 +127,6 @@ int lazily_mapped_index(uint addr) {
 
 static pte_t* walkpgdir(pde_t *pgdir, const void *va, int alloc) {
   dprintf(4,"walkpgdir(alloc=%d)\n", alloc);
-  // dprintf(3,"pgdir = 0x%x\n", pgdir);
   dprintf(2,"*pgdir = 0x%x\n", *pgdir);
   dprintf(2,"va = 0x%x\n", va);
   pde_t *pde;
@@ -143,39 +134,31 @@ static pte_t* walkpgdir(pde_t *pgdir, const void *va, int alloc) {
 
   dprintf(5,"using top 10 bits = %d of va = 0x%x to index into *pgdir at 0x%x\n", PDX(va), va, *pgdir);
   pde = &pgdir[PDX(va)];
-  // dprintf(3,"pde  = 0x%x\n", pde);
   dprintf(5,"*pde before = 0x%x\n", *pde);
   if(*pde & PTE_P){
     dprintf(5, "PDE exists for 0x%x\n", va);
     dprintf(5, "*pde = 0x%x\n", *pde);
     pgtab = (pte_t*)P2V(PTE_ADDR(*pde));
-    // dprintf(3,"pgtab1 = 0x%x\n", pgtab);
     dprintf(5,"*pgtab1 = 0x%x\n", *pgtab);
   } else {
     dprintf(5, "PDE does not exist for 0x%x, alloc = %d\n", va, alloc);
     if(!alloc)
       return 0;
-    // pgtab = (pte_t*)(ka);
     pgtab = (pte_t*)kalloc();
     dprintf(5, "kalloced new page for page table at pgtab = 0x%x, currently it has garbage, *pgtab = 0x%x\n", pgtab, *pgtab);
-    // dprintf(3,"pgtab2 = 0x%x\n", pgtab);
     if (pgtab == 0)
       return 0;
-    // Make sure all those PTE_P bits are zero.
     dprintf(5, "allocated all 0s in newly allocated page table page\n");
     memset(pgtab, 0, PGSIZE);
     dprintf(5,"*pgtab2 = 0x%x\n", *pgtab);
     dprintf(5, "pgtab2[1] = 0x%x\n", pgtab[1]);
-    // The permissions here are overly generous, but they can
-    // be further restricted by the permissions in the page table
-    // entries, if necessary.
     *pde = V2P(pgtab) | PTE_P | PTE_W | PTE_U;
     dprintf(5,"marked *pde with *pte and permissions\n");
     dprintf(5,"*pde after = 0x%x\n", *pde);
   }
   dprintf(5, "now using middle 10 bits = %d of va = 0x%x to index into *pgtab = 0x%x\n", PTX(va), va, *pgtab);
   dprintf(5,"*pte = 0x%x\n", pgtab[PTX(va)]);
-  dprintf(5,"\nSUMMARY:\n");
+  dprintf(4,"\nSUMMARY:\n");
   dprintf(4, "*pgdir = 0x%x\n*pde = 0x%x\n*pgtab = 0x%x\n*pte = 0x%x\n\n", *pgdir, *pde, *pgtab, pgtab[PTX(va)]);
   return &pgtab[PTX(va)];
 }
@@ -185,27 +168,16 @@ static int map_single_page(pde_t *pgdir, void *va, uint pa, int perm) {
   dprintf(2,"map va = 0x%x to pa = 0x%x\n", va, pa);
   dprintf(4, "check if PTE exists for pa = 0x%x, if not, assign\n", pa);
   pte_t *pte = walkpgdir(pgdir, va, 1);
-  // dprintf(3,"pte = 0x%x\n", pte);
   dprintf(3,"*pte before = 0x%x\n", *pte);
-  // if(*pte & PTE_P)
-  //   panic("remap");
   *pte = pa | perm | PTE_P;
   increment_refcount(pa);
-  dprintf(2,"*pte after = 0x%x\n", *pte);
+  dprintf(3,"*pte after = 0x%x\n", *pte);
   dprintf(5, "refcount(0x%x) = %d\n", pa, getrefcount(pa));
   return 0;
 }
 
 int do_real_mapping(uint addr, int idx) {
   dprintf(4,"do_real_mapping()\n");
-  // show_lazy_mappings();
-  // dprintf(4, "before memsetting kern_addr = 0x%x\n", kern_addr);
-  // memset((void*)kern_addr, 0, PGSIZE);
-  // dprintf(4, "after memsetting kern_addr = 0x%x\n", kern_addr);
-  // dprintf("kern_addr = 0x%x\n", kern_addr);
-  // dprintf("V2P(kern_addr) = 0x%x\n", V2P(kern_addr));
-  // if (mappages(currproc->pgdir, (void*)addr, PGSIZE, V2P(kern_addr), flags) < 0)
-  //   return -1;
   char* mem = kalloc();
   if (mem == 0)
     panic("Kernel OOM!\n");
@@ -221,7 +193,6 @@ int do_real_mapping(uint addr, int idx) {
   int flags = currproc->wmapdata.flags[idx];
 
   if (!(flags & MAP_ANONYMOUS)) {
-    // now load from fd into mem
     uint start_addr = currproc->wmapdata.winfo.addr[idx];
     int fd = currproc->wmapdata.fd[idx];
     int wmaplength = currproc->wmapdata.winfo.length[idx];
@@ -230,14 +201,14 @@ int do_real_mapping(uint addr, int idx) {
     if (remaining > PGSIZE)
       remaining = PGSIZE;
     struct file* f = currproc->ofile[fd];
-    dprintf(0, "reading %d bytes at offset %d from fd = %d into addr = 0x%x\n", remaining, offset, fd, addr);
+    dprintf(3, "reading %d bytes at offset %d from fd = %d into addr = 0x%x\n", remaining, offset, fd, addr);
     int r;
     begin_op();
     ilock(f->ip);
     r = readi(f->ip, (void*)aligned, offset, remaining);
     iunlock(f->ip);
     end_op();
-    dprintf(0, "bytes read = %d\n", r);
+    dprintf(3, "bytes read = %d\n", r);
   }
 
   // show_lazy_mappings();
@@ -375,7 +346,6 @@ found:
   p->context->eip = (uint)forkret;
 
   memset(&p->wmapdata, 0, sizeof(wmap_data));
-  // p->wmapdata.winfo.total_mmaps = 0;
   dprintf(3, "wmap info:\n");
   dprintf(3, "total_mmaps = %d\n", p->wmapdata.winfo.total_mmaps);
 
@@ -449,20 +419,10 @@ wmap(uint addr, int length, int flags, int fd)
   dprintf(4,"wmap()\n");
   dprintf(1,"wmap addr=%x, length=%d, flags=%d, fd=%d\n", addr, length, flags, fd);
   dprintf(3,"*pgdir = 0x%x\n", *myproc()->pgdir);
-  // dprintf("pgdir[0] = 0x%x\n", myproc()->pgdir[0]);
-  // dprintf("pgdir[1] = 0x%x\n", myproc()->pgdir[1]);
-  // dprintf("pgdir[179] = 0x%x\n", myproc()->pgdir[179]);
-  // dprintf("pgdir[180] = 0x%x\n", myproc()->pgdir[180]);
-  // dprintf("pgdir[181] = 0x%x\n", myproc()->pgdir[181]);
   int idx = lazily_mapped_index(addr);
   if (idx != -1)
     return FAILED;
   add_lazy_mapping(addr, length, fd, flags);
-  // show_lazy_mappings();
-  // char* mem = kalloc();
-  // mappages(myproc()->pgdir, (void*)addr, PGSIZE, V2P(mem), flags);
-  // idx = lazily_mapped_index(addr);
-  // do_real_mapping(addr, idx);
   return addr;
 }
 
@@ -496,7 +456,6 @@ wunmap_handler(uint addr, int freeidx)
       dprintf(4, "refcount(0x%x) after: %d\n", getrefcount(pa));
       int flags = currproc->wmapdata.flags[idx];
       if (!(flags & MAP_ANONYMOUS)) {
-        // now load from fd into mem
         uint start_addr = currproc->wmapdata.winfo.addr[idx];
         int fd = currproc->wmapdata.fd[idx];
         int wmaplength = currproc->wmapdata.winfo.length[idx];
@@ -505,14 +464,14 @@ wunmap_handler(uint addr, int freeidx)
         if (remaining > PGSIZE)
           remaining = PGSIZE;
         struct file* f = currproc->ofile[fd];
-        dprintf(0, "writing %d bytes at offset %d from addr = 0x%x into fd = %d\n", remaining, offset, a, fd);
+        dprintf(4, "writing %d bytes at offset %d from addr = 0x%x into fd = %d\n", remaining, offset, a, fd);
         int r;
         begin_op();
         ilock(f->ip);
         r = writei(f->ip, (void*)a, offset, remaining);
         iunlock(f->ip);
         end_op();
-        dprintf(0, "bytes written = %d\n", r);
+        dprintf(4, "bytes written = %d\n", r);
       }
       if (getrefcount(pa) == 0) {
         dprintf(4, "This was the last one, freeing 0x%x\n", pa);
@@ -536,35 +495,8 @@ uint va2pa(uint addr)
 {
   dprintf(4,"va2pa()\n");
   pte_t* pte = walkpgdir(myproc()->pgdir, (void*)addr, 0);
-
-  // dprintf(0,"pte = 0x%x\n", pte);
-  // dprintf(0,"pte = %d\n", pte);
-  // dprintf(0, "pte == 0: %d\n", pte == 0);
-  // dprintf(0,"*pte = 0x%x\n", *pte);
-  // dprintf(0,"pte = 0x%x\n", pte);
-  // dprintf(0,"pte = %d\n", pte);
-  // dprintf(0, "pte == 0: %d\n", pte == 0);
-  // dprintf(0, "&pte = 0x%x\n", &pte);
-
-  // cprintf("start\n");
-  // cprintf("pte = 0x%x\n", pte);
-  // cprintf("pte = %d\n", pte);
-  // cprintf("pte == 0: %d\n", pte == 0);
-  // cprintf("*pte = 0x%x\n", *pte);
-  // cprintf("pte = 0x%x\n", pte);
-  // cprintf("pte = %d\n", pte);
-  // cprintf("pte == 0: %d\n", pte == 0);
-  // cprintf("&pte = 0x%x\n", &pte);
-  // cprintf("start\n");
-  
-  // dprintf(0,"pte = 0x%x\n", pte);
-  // dprintf(0, "pte == 0: %d\n", pte == 0);
-  // dprintf(0,"*pte = 0x%x\n", *pte);
-
-  if (pte == 0 || *pte == 0 || !(*pte & PTE_P)) {
-    // dprintf(0,"va2pa no pte\n");
+  if (pte == 0 || *pte == 0 || !(*pte & PTE_P))
     return FAILED;
-  }
   uint offset = PTE_FLAGS(addr);
   uint pa = PTE_ADDR(*pte) | offset;
   return pa;
@@ -631,7 +563,7 @@ pde_t* copywmap(pde_t* child_pgdir) {
 }
 
 void freewmaps() {
-  dprintf(3, "freewmaps()\n");
+  dprintf(4, "freewmaps()\n");
   for (int i = 0; i < MAX_WMMAP_INFO; i++) {
     uint addr = myproc()->wmapdata.winfo.addr[i];
     if (addr > 0)
@@ -713,7 +645,8 @@ exit(void)
 
   if(curproc == initproc)
     panic("init exiting");
-  dprintf(3, "exit()\n");
+
+  dprintf(4, "exit()\n");
   freewmaps();
 
   // Close all open files.

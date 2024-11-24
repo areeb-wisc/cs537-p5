@@ -87,31 +87,6 @@ trap(struct trapframe *tf)
     dprintf(2,"PAGE fault for addr: 0x%x\n", addr);
     dprintf(2,"count = %d\n", count);
 
-    /*
-    if addr < VA_START:
-      1. this means this is a simple malloced() region
-      2. simple malloced() addresses are mapped greedily during allocuvm()
-      2. hence, it must have been copied during copyuvm() with read-only permissions
-      3. some process is trying to write to it (but it is read-only), hence we get page fault
-      4. if it was writeable, we must have set COW bit
-      5. so if cow bit is set, allocate a new page and map it to addr
-      6. copy physical page's contents, and decrement refcount
-      7. else proc is trying to write to an originally read-only page, kill it
-
-    else:
-      1. we are in wmap territory
-      2. option1: segfault occured because of lazy mapping -> do_real_mapping()
-      3. option2: same as above, this is happening because of copywmap()
-      4. all wmap pages are always write-able, so process trying to write to read-only page is not a concern here
-      5. if this is an ANONYMOUS wmap, we must have set COW bit
-      6. so if COW bit is set, allocate a new page and map it to addr
-      7. copy physical page's contents, decrement refcount
-      8. else, this is a SHARED wmap, so just make this pte writeable in faulting process
-      9. this will allow other processes who share this address to see these changes 
-
-      do_copy_on_write(uint addr, int idx)
-    */
-
     int success = -1;
     if (addr < VA_START) {
       dprintf(2, "non wmapped segfault for 0x%x\n", addr);
@@ -120,9 +95,8 @@ trap(struct trapframe *tf)
       dprintf(2, "wmapped segfault for 0x%x\n", addr);
       int idx = lazily_mapped_index(addr);
       dprintf(2, "lazily_mapped_idx = %d\n", idx);
-      if (idx != -1) {
+      if (idx != -1)
         success = do_real_mapping(addr, idx);
-      }
     }
 
     if (success == 0) {
